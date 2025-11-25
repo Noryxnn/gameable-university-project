@@ -7,6 +7,7 @@ const Register = ({ setUser }) => {
     username: "",
     email: "",
     password: "",
+    confirmPassword: "",
   });
   const [error, setError] = useState("");
   const navigate = useNavigate();
@@ -17,8 +18,18 @@ const Register = ({ setUser }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    
+    // Validate passwords match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     try {
-      const res = await axios.post("/api/users/register", formData);
+      // Only send username, email, and password to backend
+      const { confirmPassword, ...registerData } = formData;
+      const res = await axios.post("/api/users/register", registerData);
       localStorage.setItem("token", res.data.token);
       console.log(res.data);
       setUser(res.data);
@@ -66,7 +77,7 @@ const Register = ({ setUser }) => {
               required
             />
           </div>
-          <div className="mb-6">
+          <div className="mb-4">
             <label className="block text-gray-600 text-sm font-medium mb-1">
               Password
             </label>
@@ -77,6 +88,20 @@ const Register = ({ setUser }) => {
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your password"
+              required
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-600 text-sm font-medium mb-1">
+              Confirm Password
+            </label>
+            <input
+              className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200 outline-none focus:border-blue-400"
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              placeholder="Confirm your password"
               required
             />
           </div>
