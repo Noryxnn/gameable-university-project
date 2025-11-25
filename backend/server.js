@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from './routes/auth.js'
+import gamesRoutes from './routes/games.js'
 import { connectDB } from "./config/db.js";
 
 dotenv.config(); // load environment variables
@@ -14,6 +15,7 @@ app.use(express.json());
 
 //
 app.use("/api/users", authRoutes)
+app.use("/api/games", gamesRoutes)
 
 
 // connect to MongoDB

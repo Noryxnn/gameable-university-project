@@ -16,22 +16,28 @@ function App() {
   const [user, setUser] = useState(null);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  console.log(user);
+  
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const res = await axios.get("/api/users/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setUser(res.data);
-        } catch (err) {
-          setError("Failed to fetch user data");
-          localStorage.removeItem("token");
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const res = await axios.get("/api/users/me", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            setUser(res.data);
+          } catch (err) {
+            // Silently fail if backend is not available or token is invalid
+            console.error("Error fetching user:", err);
+            localStorage.removeItem("token");
+          }
         }
+      } catch (err) {
+        console.error("Error in fetchUser:", err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     fetchUser();
   }, []);
@@ -48,14 +54,15 @@ function App() {
     <Router>
       <Navbar user={user} setUser={setUser} />
       <Routes>
-        <Route path="/" element={<Home user={user} error={error} />} />
+        <Route path="/" element={<Navigate to="/home" replace />} />
+        <Route path="/home" element={<Home user={user} error={error} />} />
         <Route
           path="/login"
-          element={user ? <Navigate to="/" /> : <Login setUser={setUser} />}
+          element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
         />
         <Route
           path="/register"
-          element={user ? <Navigate to="/" /> : <Register setUser={setUser} />}
+          element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
