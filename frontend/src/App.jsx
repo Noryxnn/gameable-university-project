@@ -9,6 +9,8 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import Social from "./pages/Social";
+import UserProfile from "./pages/UserProfile";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import NotFound from "./components/NotFound";
@@ -68,6 +70,14 @@ function App() {
         <Route
           path="/profile"
           element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/social"
+          element={user ? <Social user={user} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/user/:userId"
+          element={user ? <UserProfile user={user} /> : <Navigate to="/login" />}
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
