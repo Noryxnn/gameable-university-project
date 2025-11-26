@@ -8,6 +8,7 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Profile from "./pages/Profile";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import NotFound from "./components/NotFound";
@@ -63,6 +64,10 @@ function App() {
         <Route
           path="/register"
           element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
+        />
+        <Route
+          path="/profile"
+          element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" />}
         />
         <Route path="*" element={<NotFound />} />
       </Routes>

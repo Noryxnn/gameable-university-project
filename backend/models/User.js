@@ -6,7 +6,32 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
+    bio: { type: String, default: "" },
+    profilePicture: { type: String, default: "" },
+    gamingPlatforms: {
+        steam: { type: String, default: "" },
+        xboxLive: { type: String, default: "" },
+        playstationNetwork: { type: String, default: "" },
+        xTwitter: { type: String, default: "" },
+        instagram: { type: String, default: "" },
+        facebook: { type: String, default: "" }
+    }
 },{ timestamps: true }); 
+
+// Initialize gamingPlatforms if it doesn't exist
+userSchema.pre("save", function(next) {
+    if (!this.gamingPlatforms) {
+        this.gamingPlatforms = {
+            steam: "",
+            xboxLive: "",
+            playstationNetwork: "",
+            xTwitter: "",
+            instagram: "",
+            facebook: ""
+        };
+    }
+    next();
+});
 
 //hash passwords
 userSchema.pre("save", async function(next){
