@@ -1,6 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { FaGamepad } from "react-icons/fa";
 
 const Register = ({ setUser }) => {
   const [formData, setFormData] = useState({
@@ -42,9 +43,13 @@ const Register = ({ setUser }) => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-purple-950 via-purple-900 to-purple-950 px-4 py-8">
       <div className="bg-purple-800/30 backdrop-blur-sm p-8 rounded-lg shadow-lg w-full max-w-md border border-purple-700">
-        <h2 className="text-3xl font-bold mb-6 text-center text-white">
-          Register
-        </h2>
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <FaGamepad className="text-4xl text-purple-400" />
+          <h2 className="text-3xl font-bold text-white">
+            <span className="bg-gradient-to-r from-pink-400 to-pink-500 bg-clip-text text-transparent">Game</span>
+            <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">Able</span>
+          </h2>
+        </div>
         {error && <p className="text-red-400 mb-4 text-sm bg-red-500/20 p-2 rounded">{error}</p>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
