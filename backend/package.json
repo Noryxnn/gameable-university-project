@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node server.js",
     "seed": "node scripts/seedGames.js",
-    "migrate": "node scripts/migrateUsers.js"
+    "migrate": "node scripts/migrateUsers.js",
+    "createAdmin": "node scripts/createAdmin.js"
   },
   "keywords": [],
   "author": "",

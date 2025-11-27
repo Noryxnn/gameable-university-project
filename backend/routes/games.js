@@ -1,5 +1,6 @@
 import express from 'express';
 import Game from '../models/Game.js';
+import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -26,10 +27,23 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// Create a new game
-router.post('/', async (req, res) => {
+// Create a new game (admin only)
+router.post('/', protect, admin, async (req, res) => {
     try {
-        const { title, developer, genre, description, releaseYear, imageUrl, rating, accessibilityFeatures } = req.body;
+        const { 
+            title, 
+            developer, 
+            genre, 
+            description, 
+            releaseYear, 
+            releaseDate,
+            imageUrl, 
+            trailerUrl,
+            rating, 
+            accessibilityFeatures,
+            features,
+            downloadLink
+        } = req.body;
         
         // Validate required fields
         if (!title || !developer || !genre || !description || !releaseYear || !imageUrl || !rating) {
@@ -42,9 +56,13 @@ router.post('/', async (req, res) => {
             genre,
             description,
             releaseYear,
+            releaseDate: releaseDate || null,
             imageUrl,
+            trailerUrl: trailerUrl || null,
             rating,
-            accessibilityFeatures: accessibilityFeatures || []
+            accessibilityFeatures: accessibilityFeatures || [],
+            features: features || [],
+            downloadLink: downloadLink || null
         });
 
         res.status(201).json(game);
@@ -53,8 +71,8 @@ router.post('/', async (req, res) => {
     }
 });
 
-// Update a game
-router.put('/:id', async (req, res) => {
+// Update a game (admin only)
+router.put('/:id', protect, admin, async (req, res) => {
     try {
         const game = await Game.findByIdAndUpdate(
             req.params.id,
@@ -72,8 +90,8 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Delete a game
-router.delete('/:id', async (req, res) => {
+// Delete a game (admin only)
+router.delete('/:id', protect, admin, async (req, res) => {
     try {
         const game = await Game.findByIdAndDelete(req.params.id);
         
