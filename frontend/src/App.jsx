@@ -9,6 +9,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
+import RequestGame from "./pages/RequestGame";
 import Social from "./pages/Social";
 import UserProfile from "./pages/UserProfile";
 import GameDetail from "./pages/GameDetail";
@@ -72,6 +73,10 @@ function App() {
         <Route
           path="/profile"
           element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/request-game"
+          element={user ? <RequestGame user={user} /> : <Navigate to="/login" />}
         />
         <Route
           path="/social"

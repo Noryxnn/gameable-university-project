@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import authRoutes from './routes/auth.js'
 import gamesRoutes from './routes/games.js'
+import gameRequestsRoutes from './routes/gameRequests.js'
 import reviewsRoutes from './routes/reviews.js'
 import { connectDB } from "./config/db.js";
 
@@ -52,6 +53,7 @@ app.get("/api/health", (req, res) => {
 // Routes
 app.use("/api/users", authRoutes)
 app.use("/api/games", gamesRoutes)
+app.use("/api/game-requests", gameRequestsRoutes)
 app.use("/api/reviews", reviewsRoutes)
 
 // 404 handler for API routes (must be last)
@@ -77,7 +79,9 @@ app.use((req, res, next) => {
         "POST /api/users/favorites/:gameId",
         "DELETE /api/users/favorites/:gameId",
         "GET /api/users/:userId",
-        "GET /api/users/test"
+        "GET /api/users/test",
+        "POST /api/game-requests",
+        "GET /api/game-requests"
       ]
     });
   } else {
