@@ -19,10 +19,22 @@ import AdminGameApproval from "./pages/AdminGameApproval";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import NotFound from "./components/NotFound";
+import useGameSearch from "./hooks/useGameSearch";
 
 function App() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Game search hook
+  const {
+    games,
+    filteredGames,
+    loading: gamesLoading,
+    searchQuery,
+    setSearchQuery,
+    suggestions,
+    clearSearch,
+  } = useGameSearch();
   
   useEffect(() => {
     const fetchUser = async () => {
@@ -59,10 +71,29 @@ function App() {
 
   return (
     <Router>
-      <Navbar user={user} setUser={setUser} />
+      <Navbar 
+        user={user} 
+        setUser={setUser}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        suggestions={suggestions}
+        clearSearch={clearSearch}
+      />
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<Home user={user} />} />
+        <Route 
+          path="/home" 
+          element={
+            <Home 
+              user={user} 
+              games={games}
+              filteredGames={filteredGames}
+              gamesLoading={gamesLoading}
+              searchQuery={searchQuery}
+              clearSearch={clearSearch}
+            />
+          } 
+        />
         <Route path="/game/:id" element={<GameDetail user={user} />} />
         <Route
           path="/login"

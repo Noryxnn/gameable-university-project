@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaFilter, FaTimes, FaMicrophone, FaClosedCaptioning, FaMousePointer, FaEye, FaPalette, FaHeart, FaRegHeart } from "react-icons/fa";
+import { HiXMark } from "react-icons/hi2";
 
-const Home = ({ user, error }) => {
+const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, searchQuery, clearSearch }) => {
   const navigate = useNavigate();
-  const [games, setGames] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [showFilters, setShowFilters] = useState(false);
-  const [searchQuery] = useState("");
   const [filters, setFilters] = useState({
     voiceControl: false,
     fullCaptions: false,
@@ -19,23 +17,10 @@ const Home = ({ user, error }) => {
   });
 
   useEffect(() => {
-    fetchGames();
     if (user) {
       fetchFavorites();
     }
   }, [user]);
-
-  const fetchGames = async () => {
-    try {
-      setLoading(true);
-      const res = await axios.get("/api/games");
-      setGames(res.data || []);
-    } catch (err) {
-      console.error("Error fetching games:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchFavorites = async () => {
     if (!user) return;
@@ -102,30 +87,24 @@ const Home = ({ user, error }) => {
     };
   };
 
-  const filteredGames = games.filter(game => {
-    // Search filter
-    const matchesSearch = 
-      !searchQuery ||
-      game.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.genre?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.developer?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    if (!matchesSearch) return false;
-
-    // Accessibility filters
+  // Apply accessibility filters to search-filtered games
+  const filteredGames = useMemo(() => {
+    const gamesToFilter = searchFilteredGames || games || [];
     const hasActiveFilters = Object.values(filters).some(f => f);
-    if (!hasActiveFilters) return true;
+    
+    if (!hasActiveFilters) return gamesToFilter;
 
-    const accessibility = mapAccessibility(game.accessibilityFeatures);
-    return (
-      (!filters.voiceControl || accessibility.voiceControl) &&
-      (!filters.fullCaptions || accessibility.fullCaptions) &&
-      (!filters.largeTargetInputs || accessibility.largeTargetInputs) &&
-      (!filters.colorblindMode || accessibility.colorblindMode) &&
-      (!filters.screenReader || accessibility.screenReader)
-    );
-  });
+    return gamesToFilter.filter(game => {
+      const accessibility = mapAccessibility(game.accessibilityFeatures);
+      return (
+        (!filters.voiceControl || accessibility.voiceControl) &&
+        (!filters.fullCaptions || accessibility.fullCaptions) &&
+        (!filters.largeTargetInputs || accessibility.largeTargetInputs) &&
+        (!filters.colorblindMode || accessibility.colorblindMode) &&
+        (!filters.screenReader || accessibility.screenReader)
+      );
+    });
+  }, [searchFilteredGames, games, filters]);
 
   const toggleFilter = (filterKey) => {
     setFilters({ ...filters, [filterKey]: !filters[filterKey] });
@@ -141,13 +120,22 @@ const Home = ({ user, error }) => {
     });
   };
 
-  if (loading) {
+  const clearAllFiltersAndSearch = () => {
+    clearFilters();
+    if (clearSearch) clearSearch();
+  };
+
+  if (gamesLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading games...</div>
       </div>
     );
   }
+
+  const totalGames = games?.length || 0;
+  const hasActiveFilters = Object.values(filters).some(f => f);
+  const isSearching = searchQuery && searchQuery.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900">
@@ -168,7 +156,7 @@ const Home = ({ user, error }) => {
             </p>
             <div className="flex flex-wrap gap-3 sm:gap-4 justify-center px-2">
               <div className="bg-gradient-to-r from-purple-600/20 to-purple-500/20 backdrop-blur-xl px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl border-2 border-purple-400/40 shadow-xl shadow-purple-500/20">
-                <span className="text-white font-bold text-sm sm:text-base md:text-lg">✨ {games.length} AAA Games</span>
+                <span className="text-white font-bold text-sm sm:text-base md:text-lg">✨ {totalGames} AAA Games</span>
               </div>
               <div className="bg-gradient-to-r from-pink-600/20 to-pink-500/20 backdrop-blur-xl px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl border-2 border-pink-400/40 shadow-xl shadow-pink-500/20">
                 <span className="text-white font-bold text-sm sm:text-base md:text-lg">🎤 Voice Control</span>
@@ -182,10 +170,28 @@ const Home = ({ user, error }) => {
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 pb-8">
+        {/* Search indicator */}
+        {isSearching && (
+          <div className="mb-6 p-4 bg-purple-900/30 border-2 border-purple-500/30 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="text-white/70">Showing results for: </span>
+              <span className="text-pink-400 font-bold">"{searchQuery}"</span>
+              <span className="text-white/50 ml-2">({filteredGames.length} {filteredGames.length === 1 ? 'game' : 'games'})</span>
+            </div>
+            <button
+              onClick={clearSearch}
+              className="flex items-center gap-2 text-white/70 hover:text-white bg-purple-600/20 hover:bg-purple-600/30 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <HiXMark className="w-4 h-4" />
+              Clear search
+            </button>
+          </div>
+        )}
+
         <div className="mb-6 sm:mb-8 flex items-center justify-between flex-wrap gap-3 sm:gap-4">
           <div>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent mb-1 sm:mb-2">
-              Browse Games
+              {isSearching ? 'Search Results' : 'Browse Games'}
             </h2>
             <p className="text-white/70 text-sm sm:text-base md:text-lg">
               <span className="text-pink-400 font-bold">{filteredGames.length}</span> {filteredGames.length === 1 ? 'game' : 'games'} found
@@ -199,7 +205,7 @@ const Home = ({ user, error }) => {
           >
             <FaFilter className="w-5 h-5 text-pink-400" />
             <span>Filters</span>
-            {Object.values(filters).some(f => f) && (
+            {hasActiveFilters && (
               <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full w-7 h-7 flex items-center justify-center font-bold shadow-lg shadow-pink-500/50 text-sm">
                 {Object.values(filters).filter(f => f).length}
               </span>
@@ -216,7 +222,7 @@ const Home = ({ user, error }) => {
                   Accessibility Filters
                 </span>
               </h2>
-              {Object.values(filters).some(f => f) && (
+              {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
                   className="flex items-center gap-2 text-white hover:text-pink-300 hover:bg-pink-900/30 rounded-xl font-semibold px-4 py-2 transition-colors"
@@ -341,13 +347,13 @@ const Home = ({ user, error }) => {
             <div className="text-6xl mb-4">🔍</div>
             <h3 className="text-2xl font-bold text-white mb-2">No games found</h3>
             <p className="text-white/70 mb-4">
-              {searchQuery 
+              {isSearching 
                 ? `No games match your search for "${searchQuery}". Try different keywords or clear your filters.`
                 : "No games match your current filters. Try adjusting your accessibility filters to see more results."}
             </p>
-            {Object.values(filters).some(f => f) && (
+            {(hasActiveFilters || isSearching) && (
               <button
-                onClick={clearFilters}
+                onClick={clearAllFiltersAndSearch}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-6 py-3 rounded-xl font-bold transition-colors"
               >
                 Clear All Filters
