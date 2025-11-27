@@ -80,6 +80,12 @@ app.use((req, res, next) => {
         "DELETE /api/users/favorites/:gameId",
         "GET /api/users/:userId",
         "GET /api/users/test",
+        "GET /api/reviews/game/:gameId",
+        "POST /api/reviews",
+        "PUT /api/reviews/:id",
+        "DELETE /api/reviews/:id",
+        "GET /api/games",
+        "GET /api/games/:id",
         "POST /api/game-requests",
         "GET /api/game-requests"
       ]

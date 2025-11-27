@@ -388,34 +388,42 @@ const GameDetail = ({ user }) => {
               ) : (
                 <div className="space-y-4">
                   {reviews.map((review) => (
-                    <div
-                      key={review._id}
-                      className="p-4 bg-[#1f1f2e] rounded-xl border-2 border-orange-500/20"
-                    >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden">
-                          {review.profilePicture ? (
-                            <img
-                              src={review.profilePicture}
-                              alt={review.username}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="text-white font-bold">
-                              {review.username?.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-white font-semibold">{review.username}</p>
-                          <p className="text-gray-500 text-xs">
-                            {new Date(review.createdAt).toLocaleDateString("en-US", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </p>
-                        </div>
+                      <div
+                        key={review._id}
+                        className="p-4 bg-[#1f1f2e] rounded-xl border-2 border-orange-500/20"
+                      >
+                        <div className="flex items-center gap-3 mb-2">
+                          <div 
+                            onClick={() => navigate(`/user/${review.userId}`)}
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all"
+                          >
+                            {review.profilePicture ? (
+                              <img
+                                src={review.profilePicture}
+                                alt={review.username}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-white font-bold">
+                                {review.username?.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <p 
+                              onClick={() => navigate(`/user/${review.userId}`)}
+                              className="text-white font-semibold cursor-pointer hover:text-cyan-400 transition-colors"
+                            >
+                              {review.username}
+                            </p>
+                            <p className="text-gray-500 text-xs">
+                              {new Date(review.createdAt).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              })}
+                            </p>
+                          </div>
                         <div className="flex gap-0.5">
                           {[1, 2, 3, 4, 5].map((star) => (
                             <FaStar
