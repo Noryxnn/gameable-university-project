@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaFilter, FaTimes, FaMicrophone, FaClosedCaptioning, FaMousePointer, FaEye, FaPalette } from "react-icons/fa";
 
 const Home = ({ user, error }) => {
+  const navigate = useNavigate();
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
@@ -310,6 +312,7 @@ const Home = ({ user, error }) => {
               return (
                 <div
                   key={game._id}
+                  onClick={() => navigate(`/game/${game._id}`)}
                   className="overflow-hidden hover:shadow-2xl hover:shadow-purple-500/30 hover:scale-[1.03] transition-all duration-300 cursor-pointer group bg-black/60 border-2 border-purple-500/40 hover:border-pink-400 backdrop-blur-sm rounded-xl"
                 >
                   <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-purple-900/30 to-pink-900/30">
