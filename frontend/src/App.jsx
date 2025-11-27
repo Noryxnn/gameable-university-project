@@ -10,13 +10,16 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import RequestGame from "./pages/RequestGame";
+import Social from "./pages/Social";
+import UserProfile from "./pages/UserProfile";
+import GameDetail from "./pages/GameDetail";
+import Favorites from "./pages/Favorites";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import NotFound from "./components/NotFound";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -57,7 +60,8 @@ function App() {
       <Navbar user={user} setUser={setUser} />
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<Home user={user} error={error} />} />
+        <Route path="/home" element={<Home user={user} />} />
+        <Route path="/game/:id" element={<GameDetail user={user} />} />
         <Route
           path="/login"
           element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
@@ -73,6 +77,18 @@ function App() {
         <Route
           path="/request-game"
           element={user ? <RequestGame user={user} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/social"
+          element={user ? <Social user={user} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/user/:userId"
+          element={user ? <UserProfile user={user} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/favorites"
+          element={user ? <Favorites user={user} /> : <Navigate to="/login" />}
         />
         <Route path="*" element={<NotFound />} />
       </Routes>

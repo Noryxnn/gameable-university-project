@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaFilter, FaTimes, FaMicrophone, FaClosedCaptioning, FaMousePointer, FaEye, FaPalette } from "react-icons/fa";
+import { FaFilter, FaTimes, FaMicrophone, FaClosedCaptioning, FaMousePointer, FaEye, FaPalette, FaHeart, FaRegHeart } from "react-icons/fa";
 
 const Home = ({ user, error }) => {
+  const navigate = useNavigate();
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery] = useState("");
   const [filters, setFilters] = useState({
@@ -17,7 +20,10 @@ const Home = ({ user, error }) => {
 
   useEffect(() => {
     fetchGames();
-  }, []);
+    if (user) {
+      fetchFavorites();
+    }
+  }, [user]);
 
   const fetchGames = async () => {
     try {
@@ -28,6 +34,51 @@ const Home = ({ user, error }) => {
       console.error("Error fetching games:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFavorites = async () => {
+    if (!user) return;
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/users/favorites", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const favorites = res.data.favorites || [];
+      setFavoriteIds(new Set(favorites.map(game => game._id)));
+    } catch (err) {
+      console.error("Error fetching favorites:", err);
+    }
+  };
+
+  const toggleFavorite = async (gameId, e) => {
+    e.stopPropagation();
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      const isFavorite = favoriteIds.has(gameId);
+      
+      if (isFavorite) {
+        await axios.delete(`/api/users/favorites/${gameId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setFavoriteIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(gameId);
+          return newSet;
+        });
+      } else {
+        await axios.post(`/api/users/favorites/${gameId}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setFavoriteIds(prev => new Set([...prev, gameId]));
+      }
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+      alert(err.response?.data?.message || "Failed to update favorite");
     }
   };
 
@@ -310,6 +361,7 @@ const Home = ({ user, error }) => {
               return (
                 <div
                   key={game._id}
+                  onClick={() => navigate(`/game/${game._id}`)}
                   className="overflow-hidden hover:shadow-2xl hover:shadow-purple-500/30 hover:scale-[1.03] transition-all duration-300 cursor-pointer group bg-black/60 border-2 border-purple-500/40 hover:border-pink-400 backdrop-blur-sm rounded-xl"
                 >
                   <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-purple-900/30 to-pink-900/30">
@@ -333,6 +385,21 @@ const Home = ({ user, error }) => {
                       <div className="absolute top-3 right-3 bg-purple-900/30 backdrop-blur-md px-3 py-1 rounded-full border border-purple-500/30">
                         <span className="text-sm text-purple-400 font-bold">{game.releaseYear}</span>
                       </div>
+                    )}
+
+                    {/* Favorite button */}
+                    {user && (
+                      <button
+                        onClick={(e) => toggleFavorite(game._id, e)}
+                        className="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 backdrop-blur-md p-2 rounded-full border-2 border-pink-500/50 hover:border-pink-400 transition-all shadow-lg"
+                        title={favoriteIds.has(game._id) ? "Remove from favorites" : "Add to favorites"}
+                      >
+                        {favoriteIds.has(game._id) ? (
+                          <FaHeart className="w-5 h-5 text-pink-500 fill-pink-500" />
+                        ) : (
+                          <FaRegHeart className="w-5 h-5 text-pink-500" />
+                        )}
+                      </button>
                     )}
                   </div>
                   

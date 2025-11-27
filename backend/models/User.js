@@ -15,7 +15,11 @@ const userSchema = new mongoose.Schema({
         xTwitter: { type: String, default: "" },
         instagram: { type: String, default: "" },
         facebook: { type: String, default: "" }
-    }
+    },
+    favoriteGames: [{ type: mongoose.Schema.Types.ObjectId, ref: "Game" }],
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    friendRequestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
 },{ timestamps: true }); 
 
 // Initialize gamingPlatforms if it doesn't exist
@@ -29,6 +33,19 @@ userSchema.pre("save", function(next) {
             instagram: "",
             facebook: ""
         };
+    }
+    // Initialize arrays if they don't exist
+    if (!this.favoriteGames) {
+        this.favoriteGames = [];
+    }
+    if (!this.friends) {
+        this.friends = [];
+    }
+    if (!this.friendRequestsSent) {
+        this.friendRequestsSent = [];
+    }
+    if (!this.friendRequestsReceived) {
+        this.friendRequestsReceived = [];
     }
     next();
 });
