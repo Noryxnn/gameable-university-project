@@ -73,6 +73,9 @@ app.use((req, res, next) => {
         "POST /api/users/friends/accept/:userId",
         "POST /api/users/friends/decline/:userId",
         "DELETE /api/users/friends/:userId",
+        "GET /api/users/favorites",
+        "POST /api/users/favorites/:gameId",
+        "DELETE /api/users/favorites/:gameId",
         "GET /api/users/:userId",
         "GET /api/users/test"
       ]
