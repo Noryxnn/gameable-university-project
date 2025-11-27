@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { FaGamepad, FaHome, FaHeart, FaUser, FaSignOutAlt, FaUsers, FaBars, FaTimes } from "react-icons/fa";
+import { FaGamepad, FaHome, FaHeart, FaUser, FaSignOutAlt, FaUsers, FaBars, FaTimes, FaPlusCircle } from "react-icons/fa";
 import { HiMagnifyingGlass } from "react-icons/hi2";
 
 const Navbar = ({ user, setUser }) => {
@@ -96,6 +96,17 @@ const Navbar = ({ user, setUser }) => {
                 >
                   <FaUser className="w-5 h-5" />
                   <span>Profile</span>
+                </button>
+                <button
+                  onClick={() => navigate("/request-game")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
+                    isActive("/request-game")
+                      ? "bg-green-600/30 text-green-300"
+                      : "text-white hover:bg-green-600/20"
+                  }`}
+                >
+                  <FaPlusCircle className="w-5 h-5" />
+                  <span>Request</span>
                 </button>
                 <button
                   onClick={handleLogout}
@@ -246,6 +257,17 @@ const Navbar = ({ user, setUser }) => {
                     >
                       <FaUser className="w-5 h-5" />
                       <span>Profile</span>
+                    </button>
+                    <button
+                      onClick={() => handleNavigation("/request-game")}
+                      className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
+                        isActive("/request-game")
+                          ? "bg-green-600/30 text-green-300"
+                          : "text-white hover:bg-green-600/20"
+                      }`}
+                    >
+                      <FaPlusCircle className="w-5 h-5" />
+                      <span>Request</span>
                     </button>
                     <div className="border-t border-purple-500/20 my-2" />
                     <button

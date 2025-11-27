@@ -35,7 +35,7 @@ const GameDetail = ({ user }) => {
     fetchGame();
     fetchReviews();
     checkFavorite();
-  }, [id]);
+  }, [id, user]);
 
   const fetchGame = async () => {
     try {
@@ -58,20 +58,45 @@ const GameDetail = ({ user }) => {
     }
   };
 
-  const checkFavorite = () => {
-    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-    setIsFavorite(favorites.includes(id));
+  const checkFavorite = async () => {
+    if (!user) {
+      setIsFavorite(false);
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.get("/api/users/favorites", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const favorites = res.data.favorites || [];
+      setIsFavorite(favorites.some(game => game._id === id));
+    } catch (err) {
+      console.error("Error checking favorite:", err);
+      setIsFavorite(false);
+    }
   };
 
-  const toggleFavorite = () => {
-    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-    if (isFavorite) {
-      const newFavorites = favorites.filter((favId) => favId !== id);
-      localStorage.setItem("favorites", JSON.stringify(newFavorites));
-      setIsFavorite(false);
-    } else {
-      localStorage.setItem("favorites", JSON.stringify([...favorites, id]));
-      setIsFavorite(true);
+  const toggleFavorite = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("token");
+      if (isFavorite) {
+        await axios.delete(`/api/users/favorites/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setIsFavorite(false);
+      } else {
+        await axios.post(`/api/users/favorites/${id}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setIsFavorite(true);
+      }
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+      alert(err.response?.data?.message || "Failed to update favorite");
     }
   };
 
