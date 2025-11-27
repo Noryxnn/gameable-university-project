@@ -1,11 +1,13 @@
 import express from "express";
 import User from "../models/User.js";
+import Game from "../models/Game.js";
 import { protect } from "../middleware/auth.js";
 import jwt from "jsonwebtoken";
 import upload from "../middleware/upload.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import mongoose from "mongoose";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -415,6 +417,122 @@ router.delete("/friends/:userId", protect, async (req, res) => {
   } catch (err) {
     console.error("Remove friend error:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get user's favorites
+router.get("/favorites", protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Populate favorite games
+    await user.populate("favoriteGames", "title developer genre description releaseYear releaseDate imageUrl trailerUrl rating reviewScore reviewCount accessibilityFeatures features downloadLink");
+
+    res.status(200).json({ favorites: user.favoriteGames || [] });
+  } catch (err) {
+    console.error("Get favorites error:", err);
+    console.error("Error details:", err.stack);
+    res.status(500).json({ 
+      message: err.message || "Server error",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+});
+
+// Add game to favorites
+router.post("/favorites/:gameId", protect, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    
+    // Validate gameId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(gameId)) {
+      return res.status(400).json({ message: "Invalid game ID" });
+    }
+
+    // Check if game exists
+    const game = await Game.findById(gameId);
+    if (!game) {
+      return res.status(404).json({ message: "Game not found" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if game is already in favorites (compare as strings)
+    const isAlreadyFavorite = user.favoriteGames.some(
+      favId => favId.toString() === gameId
+    );
+    if (isAlreadyFavorite) {
+      return res.status(400).json({ message: "Game already in favorites" });
+    }
+
+    // Add game to favorites
+    user.favoriteGames.push(gameId);
+    await user.save();
+
+    // Populate and return the updated favorites
+    await user.populate("favoriteGames", "title developer genre description releaseYear releaseDate imageUrl trailerUrl rating reviewScore reviewCount accessibilityFeatures features downloadLink");
+
+    res.status(200).json({ 
+      message: "Game added to favorites",
+      favorites: user.favoriteGames 
+    });
+  } catch (err) {
+    console.error("Add favorite error:", err);
+    console.error("Error details:", err.stack);
+    res.status(500).json({ 
+      message: err.message || "Server error",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
+  }
+});
+
+// Remove game from favorites
+router.delete("/favorites/:gameId", protect, async (req, res) => {
+  try {
+    const { gameId } = req.params;
+    
+    // Validate gameId is a valid ObjectId
+    if (!mongoose.Types.ObjectId.isValid(gameId)) {
+      return res.status(400).json({ message: "Invalid game ID" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Check if game is in favorites
+    const isInFavorites = user.favoriteGames.some(
+      favId => favId.toString() === gameId
+    );
+    if (!isInFavorites) {
+      return res.status(400).json({ message: "Game is not in favorites" });
+    }
+
+    // Remove game from favorites
+    user.favoriteGames = user.favoriteGames.filter(
+      id => id.toString() !== gameId
+    );
+    await user.save();
+
+    res.status(200).json({ 
+      message: "Game removed from favorites",
+      favorites: user.favoriteGames 
+    });
+  } catch (err) {
+    console.error("Remove favorite error:", err);
+    console.error("Error details:", err.stack);
+    res.status(500).json({ 
+      message: err.message || "Server error",
+      error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 });
 
