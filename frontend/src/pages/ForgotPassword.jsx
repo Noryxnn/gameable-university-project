@@ -3,28 +3,26 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { FaGamepad } from "react-icons/fa";
 
-const Login = ({ setUser }) => {
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-  });
+const ForgotPassword = () => {
+  const [email, setEmail] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setSuccess("");
+    setIsLoading(true);
+
     try {
-      const res = await axios.post("/api/users/login", formData);
-      localStorage.setItem("token", res.data.token);
-      console.log(res.data);
-      setUser(res.data);
-      navigate("/home");
+      const res = await axios.post("/api/users/forgot-password", { email });
+      setSuccess(res.data.message || "If that email exists, a password reset link has been sent");
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || "Failed to send reset email");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -38,9 +36,14 @@ const Login = ({ setUser }) => {
             <span className="bg-gradient-to-r from-cyan-400 to-cyan-500 bg-clip-text text-transparent">Able</span>
           </h2>
         </div>
+        <h3 className="text-2xl font-bold text-white mb-2 text-center">Forgot Password</h3>
+        <p className="text-purple-200 text-sm mb-6 text-center">
+          Enter your email address and we'll send you a link to reset your password.
+        </p>
         {error && <p className="text-red-400 mb-4 text-sm bg-red-500/20 p-2 rounded">{error}</p>}
+        {success && <p className="text-green-400 mb-4 text-sm bg-green-500/20 p-2 rounded">{success}</p>}
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+          <div className="mb-6">
             <label className="block text-purple-200 text-sm font-medium mb-1">
               Email
             </label>
@@ -48,41 +51,26 @@ const Login = ({ setUser }) => {
               className="w-full p-3 bg-purple-900/50 border border-purple-700 rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 outline-none focus:border-purple-500"
               type="email"
               name="email"
-              value={formData.email}
-              onChange={handleChange}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               autoComplete="off"
               required
+              disabled={isLoading}
             />
           </div>
-          <div className="mb-4">
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-purple-200 text-sm font-medium">
-                Password
-              </label>
-              <Link to="/forgot-password" className="text-pink-400 hover:text-pink-300 text-sm font-medium">
-                Forgot Password?
-              </Link>
-            </div>
-            <input
-              className="w-full p-3 bg-purple-900/50 border border-purple-700 rounded-md text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 outline-none focus:border-purple-500"
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-          <button className="w-full bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-md font-medium cursor-pointer transition-colors">
-            Login
+          <button 
+            className="w-full bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-md font-medium cursor-pointer transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
+          >
+            {isLoading ? "Sending..." : "Send Reset Link"}
           </button>
         </form>
         <div className="mt-6 text-center">
           <p className="text-purple-200 text-sm">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-pink-400 hover:text-pink-300 font-medium underline">
-              Sign up
+            Remember your password?{" "}
+            <Link to="/login" className="text-pink-400 hover:text-pink-300 font-medium underline">
+              Back to Login
             </Link>
           </p>
         </div>
@@ -91,4 +79,5 @@ const Login = ({ setUser }) => {
   );
 };
 
-export default Login;
+export default ForgotPassword;
+
