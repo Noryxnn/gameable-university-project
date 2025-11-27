@@ -67,6 +67,13 @@ app.use((req, res, next) => {
         "GET /api/users/me",
         "PUT /api/users/profile",
         "POST /api/users/profile/upload",
+        "GET /api/users/search",
+        "GET /api/users/friends/list",
+        "POST /api/users/friends/request/:userId",
+        "POST /api/users/friends/accept/:userId",
+        "POST /api/users/friends/decline/:userId",
+        "DELETE /api/users/friends/:userId",
+        "GET /api/users/:userId",
         "GET /api/users/test"
       ]
     });
