@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import authRoutes from './routes/auth.js'
 import gamesRoutes from './routes/games.js'
+import reviewsRoutes from './routes/reviews.js'
 import { connectDB } from "./config/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -51,6 +52,7 @@ app.get("/api/health", (req, res) => {
 // Routes
 app.use("/api/users", authRoutes)
 app.use("/api/games", gamesRoutes)
+app.use("/api/reviews", reviewsRoutes)
 
 // 404 handler for API routes (must be last)
 // Express 5 doesn't support /api/* pattern, so we catch all unmatched /api routes

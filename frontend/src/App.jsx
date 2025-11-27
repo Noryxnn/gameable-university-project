@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import Social from "./pages/Social";
 import UserProfile from "./pages/UserProfile";
+import GameDetail from "./pages/GameDetail";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import NotFound from "./components/NotFound";
@@ -59,6 +60,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<Home user={user} error={error} />} />
+        <Route path="/game/:id" element={<GameDetail user={user} />} />
         <Route
           path="/login"
           element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
