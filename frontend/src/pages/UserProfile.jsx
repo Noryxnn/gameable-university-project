@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaUser, FaArrowLeft, FaGamepad, FaXbox, FaPlaystation, FaFacebook, FaInstagram } from 'react-icons/fa';
+import { FaUser, FaArrowLeft, FaGamepad, FaXbox, FaPlaystation, FaFacebook, FaInstagram, FaUserPlus, FaUserCheck, FaUserClock, FaUserMinus } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
 const UserProfile = ({ user: currentUser }) => {
@@ -10,12 +10,17 @@ const UserProfile = ({ user: currentUser }) => {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [friendStatus, setFriendStatus] = useState('none'); // 'none', 'friends', 'request_sent', 'request_received'
+  const [friendActionLoading, setFriendActionLoading] = useState(false);
 
   useEffect(() => {
     if (userId) {
       fetchUserProfile();
+      if (currentUser) {
+        checkFriendStatus();
+      }
     }
-  }, [userId]);
+  }, [userId, currentUser]);
 
   const fetchUserProfile = async () => {
     try {
@@ -30,6 +35,77 @@ const UserProfile = ({ user: currentUser }) => {
       console.error('Error fetching user profile:', err);
       setError(err.response?.data?.message || 'Failed to load user profile');
       setLoading(false);
+    }
+  };
+
+  const checkFriendStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/api/users/friends/list', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const { friends, sentRequests, receivedRequests } = res.data;
+      
+      if (friends?.some(f => f._id === userId)) {
+        setFriendStatus('friends');
+      } else if (sentRequests?.some(r => r._id === userId)) {
+        setFriendStatus('request_sent');
+      } else if (receivedRequests?.some(r => r._id === userId)) {
+        setFriendStatus('request_received');
+      } else {
+        setFriendStatus('none');
+      }
+    } catch (err) {
+      console.error('Error checking friend status:', err);
+    }
+  };
+
+  const sendFriendRequest = async () => {
+    try {
+      setFriendActionLoading(true);
+      const token = localStorage.getItem('token');
+      await axios.post(`/api/users/friends/request/${userId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFriendStatus('request_sent');
+    } catch (err) {
+      console.error('Error sending friend request:', err);
+      alert(err.response?.data?.message || 'Failed to send friend request');
+    } finally {
+      setFriendActionLoading(false);
+    }
+  };
+
+  const acceptFriendRequest = async () => {
+    try {
+      setFriendActionLoading(true);
+      const token = localStorage.getItem('token');
+      await axios.post(`/api/users/friends/accept/${userId}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFriendStatus('friends');
+    } catch (err) {
+      console.error('Error accepting friend request:', err);
+      alert(err.response?.data?.message || 'Failed to accept friend request');
+    } finally {
+      setFriendActionLoading(false);
+    }
+  };
+
+  const removeFriend = async () => {
+    try {
+      setFriendActionLoading(true);
+      const token = localStorage.getItem('token');
+      await axios.delete(`/api/users/friends/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFriendStatus('none');
+    } catch (err) {
+      console.error('Error removing friend:', err);
+      alert(err.response?.data?.message || 'Failed to remove friend');
+    } finally {
+      setFriendActionLoading(false);
     }
   };
 
@@ -115,7 +191,7 @@ const UserProfile = ({ user: currentUser }) => {
                   {userProfile.username}
                 </h1>
                 <div className="text-gray-400">{userProfile.email}</div>
-                {isOwnProfile && (
+                {isOwnProfile ? (
                   <button
                     onClick={() => navigate('/profile')}
                     className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -123,6 +199,48 @@ const UserProfile = ({ user: currentUser }) => {
                     <FaUser className="w-4 h-4" />
                     Edit Profile
                   </button>
+                ) : currentUser && (
+                  <div className="flex gap-3">
+                    {friendStatus === 'none' && (
+                      <button
+                        onClick={sendFriendRequest}
+                        disabled={friendActionLoading}
+                        className="flex items-center gap-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                      >
+                        <FaUserPlus className="w-4 h-4" />
+                        {friendActionLoading ? 'Sending...' : 'Add Friend'}
+                      </button>
+                    )}
+                    {friendStatus === 'request_sent' && (
+                      <button
+                        disabled
+                        className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-lg font-medium cursor-not-allowed"
+                      >
+                        <FaUserClock className="w-4 h-4" />
+                        Request Sent
+                      </button>
+                    )}
+                    {friendStatus === 'request_received' && (
+                      <button
+                        onClick={acceptFriendRequest}
+                        disabled={friendActionLoading}
+                        className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                      >
+                        <FaUserCheck className="w-4 h-4" />
+                        {friendActionLoading ? 'Accepting...' : 'Accept Request'}
+                      </button>
+                    )}
+                    {friendStatus === 'friends' && (
+                      <button
+                        onClick={removeFriend}
+                        disabled={friendActionLoading}
+                        className="flex items-center gap-2 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                      >
+                        <FaUserMinus className="w-4 h-4" />
+                        {friendActionLoading ? 'Removing...' : 'Remove Friend'}
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

@@ -74,7 +74,13 @@ app.use((req, res, next) => {
         "POST /api/users/friends/decline/:userId",
         "DELETE /api/users/friends/:userId",
         "GET /api/users/:userId",
-        "GET /api/users/test"
+        "GET /api/users/test",
+        "GET /api/reviews/game/:gameId",
+        "POST /api/reviews",
+        "PUT /api/reviews/:id",
+        "DELETE /api/reviews/:id",
+        "GET /api/games",
+        "GET /api/games/:id"
       ]
     });
   } else {
