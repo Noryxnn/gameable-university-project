@@ -1,5 +1,6 @@
 import express from 'express';
 import GameRequest from '../models/GameRequest.js';
+import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -96,7 +97,134 @@ router.get('/', async (req, res) => {
     }
 });
 
+// Admin routes - require authentication and admin privileges
+// These specific routes must come before the generic /:id route
+// PUT /api/game-requests/:id/approve - Approve a game request
+router.put('/:id/approve', protect, admin, async (req, res) => {
+    try {
+        const request = await GameRequest.findById(req.params.id);
+        
+        if (!request) {
+            return res.status(404).json({ 
+                message: 'Game request not found' 
+            });
+        }
+
+        if (request.status !== 'pending') {
+            return res.status(400).json({ 
+                message: 'Request has already been processed' 
+            });
+        }
+
+        request.status = 'approved';
+        request.reviewedAt = new Date();
+        request.notes = req.body.notes || request.notes;
+        
+        await request.save();
+
+        res.json({ 
+            message: 'Game request approved',
+            request 
+        });
+    } catch (error) {
+        console.error('Error approving game request:', error);
+        res.status(500).json({ 
+            message: 'Failed to approve game request' 
+        });
+    }
+});
+
+// PUT /api/game-requests/:id/decline - Decline a game request
+router.put('/:id/decline', protect, admin, async (req, res) => {
+    try {
+        const request = await GameRequest.findById(req.params.id);
+        
+        if (!request) {
+            return res.status(404).json({ 
+                message: 'Game request not found' 
+            });
+        }
+
+        if (request.status !== 'pending') {
+            return res.status(400).json({ 
+                message: 'Request has already been processed' 
+            });
+        }
+
+        request.status = 'rejected';
+        request.reviewedAt = new Date();
+        request.notes = req.body.notes || request.notes;
+        
+        await request.save();
+
+        res.json({ 
+            message: 'Game request declined',
+            request 
+        });
+    } catch (error) {
+        console.error('Error declining game request:', error);
+        res.status(500).json({ 
+            message: 'Failed to decline game request' 
+        });
+    }
+});
+
+// PUT /api/game-requests/:id/added - Mark request as added (game was created)
+router.put('/:id/added', protect, admin, async (req, res) => {
+    try {
+        const request = await GameRequest.findById(req.params.id);
+        
+        if (!request) {
+            return res.status(404).json({ 
+                message: 'Game request not found' 
+            });
+        }
+
+        request.status = 'added';
+        request.reviewedAt = new Date();
+        request.notes = req.body.notes || request.notes;
+        
+        await request.save();
+
+        res.json({ 
+            message: 'Game request marked as added',
+            request 
+        });
+    } catch (error) {
+        console.error('Error marking game request as added:', error);
+        res.status(500).json({ 
+            message: 'Failed to update game request' 
+        });
+    }
+});
+
+// DELETE /api/game-requests/:id - Delete a game request (admin only)
+// Must be placed before GET /:id to ensure proper route matching
+router.delete('/:id', protect, admin, async (req, res) => {
+    try {
+        const request = await GameRequest.findByIdAndDelete(req.params.id);
+        
+        if (!request) {
+            return res.status(404).json({ 
+                message: 'Game request not found' 
+            });
+        }
+
+        res.json({ 
+            message: 'Game request deleted successfully',
+            request 
+        });
+    } catch (error) {
+        console.error('Error deleting game request:', error);
+        res.status(500).json({ 
+            message: 'Failed to delete game request',
+            error: error.message 
+        });
+    }
+});
+
 // GET /api/game-requests/:id - Get a specific game request
+// This must come after all specific routes (approve, decline, added, delete)
 router.get('/:id', async (req, res) => {
     try {
         const request = await GameRequest.findById(req.params.id)

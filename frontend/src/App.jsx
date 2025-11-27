@@ -14,6 +14,8 @@ import Social from "./pages/Social";
 import UserProfile from "./pages/UserProfile";
 import GameDetail from "./pages/GameDetail";
 import Favorites from "./pages/Favorites";
+import AdminRequests from "./pages/AdminRequests";
+import AdminGameApproval from "./pages/AdminGameApproval";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import NotFound from "./components/NotFound";
@@ -89,6 +91,14 @@ function App() {
         <Route
           path="/favorites"
           element={user ? <Favorites user={user} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/admin/requests"
+          element={user?.isAdmin ? <AdminRequests user={user} /> : <Navigate to="/home" />}
+        />
+        <Route
+          path="/admin/approve-game/:requestId"
+          element={user?.isAdmin ? <AdminGameApproval user={user} /> : <Navigate to="/home" />}
         />
         <Route path="*" element={<NotFound />} />
       </Routes>

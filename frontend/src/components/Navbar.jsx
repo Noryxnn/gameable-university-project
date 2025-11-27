@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { FaGamepad, FaHome, FaHeart, FaUser, FaSignOutAlt, FaUsers, FaBars, FaTimes, FaPlusCircle } from "react-icons/fa";
+import { FaGamepad, FaHome, FaHeart, FaUser, FaSignOutAlt, FaUsers, FaBars, FaTimes, FaPlusCircle, FaShieldAlt } from "react-icons/fa";
 import { HiMagnifyingGlass } from "react-icons/hi2";
 
 const Navbar = ({ user, setUser }) => {
@@ -18,6 +18,9 @@ const Navbar = ({ user, setUser }) => {
   };
 
   const isActive = (path) => {
+    if (path === "/admin/requests") {
+      return location.pathname === "/admin/requests" || location.pathname.startsWith("/admin/approve-game");
+    }
     return location.pathname === path;
   };
 
@@ -108,6 +111,19 @@ const Navbar = ({ user, setUser }) => {
                   <FaPlusCircle className="w-5 h-5" />
                   <span>Request</span>
                 </button>
+                {user?.isAdmin && (
+                  <button
+                    onClick={() => navigate("/admin/requests")}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
+                      isActive("/admin/requests") || isActive("/admin/approve-game")
+                        ? "bg-orange-600/30 text-orange-300"
+                        : "text-white hover:bg-orange-600/20"
+                    }`}
+                  >
+                    <FaShieldAlt className="w-5 h-5" />
+                    <span>Admin</span>
+                  </button>
+                )}
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl text-white hover:bg-red-600/30 hover:text-red-300 transition-colors"
@@ -269,6 +285,19 @@ const Navbar = ({ user, setUser }) => {
                       <FaPlusCircle className="w-5 h-5" />
                       <span>Request</span>
                     </button>
+                    {user?.isAdmin && (
+                      <button
+                        onClick={() => handleNavigation("/admin/requests")}
+                        className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
+                          isActive("/admin/requests") || isActive("/admin/approve-game")
+                            ? "bg-orange-600/30 text-orange-300"
+                            : "text-white hover:bg-orange-600/20"
+                        }`}
+                      >
+                        <FaShieldAlt className="w-5 h-5" />
+                        <span>Admin</span>
+                      </button>
+                    )}
                     <div className="border-t border-purple-500/20 my-2" />
                     <button
                       onClick={handleLogout}
