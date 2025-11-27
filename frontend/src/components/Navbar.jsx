@@ -23,8 +23,10 @@ const Navbar = ({
   // Close suggestions when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target) &&
-          mobileSearchRef.current && !mobileSearchRef.current.contains(e.target)) {
+      const clickedOutsideDesktop = searchRef.current && !searchRef.current.contains(e.target);
+      const clickedOutsideMobile = !mobileSearchRef.current || !mobileSearchRef.current.contains(e.target);
+      
+      if (clickedOutsideDesktop && clickedOutsideMobile) {
         setShowSuggestions(false);
         setSelectedIndex(-1);
       }
@@ -124,36 +126,9 @@ const Navbar = ({
     setSelectedIndex(-1);
   };
 
-  const SearchInput = ({ isMobile = false }) => (
-    <div className={`relative ${isMobile ? "w-full" : "w-72"}`} ref={isMobile ? mobileSearchRef : searchRef}>
-      <form onSubmit={handleSearchSubmit}>
-        <div className="relative">
-          <HiMagnifyingGlass className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search games or developers..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            onFocus={() => searchQuery && setShowSuggestions(true)}
-            onKeyDown={handleKeyDown}
-            className="pl-12 pr-10 h-12 bg-black/60 backdrop-blur-md border-2 border-purple-500/40 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder:text-gray-400 rounded-xl w-full outline-none transition-all"
-            aria-label="Search for games"
-            autoComplete="off"
-            autoFocus={isMobile}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={handleClearSearch}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
-              aria-label="Clear search"
-            >
-              <HiXMark className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-      </form>
-
+  // Suggestions dropdown JSX (reusable)
+  const renderSuggestions = () => (
+    <>
       {/* Autocomplete Suggestions Dropdown */}
       {showSuggestions && suggestions.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-xl border-2 border-purple-500/40 rounded-xl shadow-2xl shadow-purple-500/20 overflow-hidden z-50">
@@ -162,7 +137,10 @@ const Navbar = ({
               <li key={game._id}>
                 <button
                   type="button"
-                  onClick={() => handleSuggestionClick(game)}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSuggestionClick(game);
+                  }}
                   className={`w-full px-4 py-3 flex items-center gap-3 text-left transition-colors ${
                     index === selectedIndex
                       ? "bg-purple-600/30 text-white"
@@ -207,7 +185,7 @@ const Navbar = ({
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 
   return (
@@ -317,7 +295,38 @@ const Navbar = ({
           {/* Desktop Search - Right Side */}
           <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
             {currentPage !== "login" && currentPage !== "register" && (
-              <SearchInput />
+              <div className="relative w-72" ref={searchRef}>
+                <form onSubmit={handleSearchSubmit}>
+                  <div className="relative">
+                    <HiMagnifyingGlass className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400 w-5 h-5 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search games or developers..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      onFocus={() => searchQuery && setShowSuggestions(true)}
+                      onKeyDown={handleKeyDown}
+                      className="pl-12 pr-10 h-12 bg-black/60 backdrop-blur-md border-2 border-purple-500/40 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder:text-gray-400 rounded-xl w-full outline-none transition-all"
+                      aria-label="Search for games"
+                      autoComplete="off"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleClearSearch();
+                        }}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                        aria-label="Clear search"
+                      >
+                        <HiXMark className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </form>
+                {renderSuggestions()}
+              </div>
             )}
             {!user && (
               <Link
@@ -357,7 +366,39 @@ const Navbar = ({
         {/* Mobile Search Bar (Expandable) */}
         {isSearchOpen && currentPage !== "login" && currentPage !== "register" && (
           <div className="lg:hidden pb-4 animate-in slide-in-from-top-2 duration-200">
-            <SearchInput isMobile />
+            <div className="relative w-full" ref={mobileSearchRef}>
+              <form onSubmit={handleSearchSubmit}>
+                <div className="relative">
+                  <HiMagnifyingGlass className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400 w-5 h-5 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search games or developers..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    onFocus={() => searchQuery && setShowSuggestions(true)}
+                    onKeyDown={handleKeyDown}
+                    className="pl-12 pr-10 h-12 bg-black/60 backdrop-blur-md border-2 border-purple-500/40 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder:text-gray-400 rounded-xl w-full outline-none transition-all"
+                    aria-label="Search for games"
+                    autoComplete="off"
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleClearSearch();
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      aria-label="Clear search"
+                    >
+                      <HiXMark className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              </form>
+              {renderSuggestions()}
+            </div>
           </div>
         )}
       </div>
