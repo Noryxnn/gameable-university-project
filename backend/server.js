@@ -66,6 +66,8 @@ app.use((req, res, next) => {
         "GET /api/health",
         "POST /api/users/register",
         "POST /api/users/login",
+        "POST /api/users/forgot-password",
+        "POST /api/users/reset-password/:token",
         "GET /api/users/me",
         "PUT /api/users/profile",
         "POST /api/users/profile/upload",

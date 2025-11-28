@@ -8,6 +8,8 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import RequestGame from "./pages/RequestGame";
 import Social from "./pages/Social";
@@ -71,6 +73,14 @@ function App() {
         <Route
           path="/register"
           element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
+        />
+        <Route
+          path="/forgot-password"
+          element={user ? <Navigate to="/home" /> : <ForgotPassword />}
+        />
+        <Route
+          path="/reset-password/:token"
+          element={user ? <Navigate to="/home" /> : <ResetPassword />}
         />
         <Route
           path="/profile"

@@ -8,6 +8,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
 import mongoose from "mongoose";
+import nodemailer from "nodemailer";
+import crypto from "crypto";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -538,7 +540,145 @@ router.delete("/favorites/:gameId", protect, async (req, res) => {
   }
 });
 
-// Get user profile by ID (must come after all /friends/* routes)
+// Forgot Password (must come before /:userId route)
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Please provide an email address" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return res.status(200).json({ 
+        message: "If that email exists, a password reset link has been sent" 
+      });
+    }
+
+    // Check if SMTP is configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error("SMTP credentials not configured. Please set SMTP_USER and SMTP_PASS in .env file");
+      return res.status(500).json({ 
+        message: "Email service is not configured. Please contact support." 
+      });
+    }
+
+    // Generate reset token
+    const resetToken = user.getResetPasswordToken();
+    await user.save({ validateBeforeSave: false });
+
+    // Create reset URL
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+
+    // Create email transporter
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    // Email content
+    const message = {
+      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      to: email,
+      subject: 'Password Reset Request - GameAble',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #9333ea;">Password Reset Request</h2>
+          <p>You requested to reset your password for your GameAble account.</p>
+          <p>Click the link below to reset your password:</p>
+          <a href="${resetUrl}" style="display: inline-block; background-color: #ec4899; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin: 20px 0;">
+            Reset Password
+          </a>
+          <p>This link will expire in 10 minutes.</p>
+          <p>If you didn't request this, please ignore this email.</p>
+          <p style="color: #666; font-size: 12px; margin-top: 30px;">
+            If the button doesn't work, copy and paste this link into your browser:<br>
+            ${resetUrl}
+          </p>
+        </div>
+      `,
+    };
+
+    try {
+      await transporter.sendMail(message);
+      res.status(200).json({ 
+        message: "If that email exists, a password reset link has been sent" 
+      });
+    } catch (emailError) {
+      console.error("Email error details:", {
+        message: emailError.message,
+        code: emailError.code,
+        response: emailError.response,
+        command: emailError.command
+      });
+      
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+      
+      // Provide more helpful error message in development
+      const errorMessage = process.env.NODE_ENV === 'development' 
+        ? `Email could not be sent: ${emailError.message}. Check SMTP configuration.`
+        : "Email could not be sent. Please try again later.";
+      
+      return res.status(500).json({ 
+        message: errorMessage 
+      });
+    }
+  } catch (err) {
+    console.error("Forgot password error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Reset Password
+router.post("/reset-password/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ message: "Please provide a new password" });
+    }
+
+    // Hash token to compare with stored token
+    const hashedToken = crypto
+      .createHash('sha256')
+      .update(token)
+      .digest('hex');
+
+    // Find user with matching token and check if token hasn't expired
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    // Set new password
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Get user profile by ID (must come after all specific routes)
 router.get("/:userId", protect, async (req, res) => {
   try {
     const user = await User.findById(req.params.userId)
