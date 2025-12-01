@@ -3,6 +3,8 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaGamepad, FaHome, FaHeart, FaUser, FaSignOutAlt, FaUsers, FaBars, FaTimes, FaPlusCircle, FaShieldAlt } from "react-icons/fa";
 import { HiMagnifyingGlass, HiXMark } from "react-icons/hi2";
 
+const SEARCH_INPUT_MAX_LENGTH = 60;
+
 const Navbar = ({ 
   user, 
   setUser, 
@@ -309,6 +311,7 @@ const Navbar = ({
                       onChange={handleSearchChange}
                       onFocus={() => searchQuery && setShowSuggestions(true)}
                       onKeyDown={handleKeyDown}
+                      maxLength={SEARCH_INPUT_MAX_LENGTH}
                       className="pl-12 pr-10 h-12 bg-black/60 backdrop-blur-md border-2 border-purple-500/40 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder:text-gray-400 rounded-xl w-full outline-none transition-all"
                       aria-label="Search for games"
                       autoComplete="off"
@@ -380,6 +383,7 @@ const Navbar = ({
                     onChange={handleSearchChange}
                     onFocus={() => searchQuery && setShowSuggestions(true)}
                     onKeyDown={handleKeyDown}
+                    maxLength={SEARCH_INPUT_MAX_LENGTH}
                     className="pl-12 pr-10 h-12 bg-black/60 backdrop-blur-md border-2 border-purple-500/40 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder:text-gray-400 rounded-xl w-full outline-none transition-all"
                     aria-label="Search for games"
                     autoComplete="off"

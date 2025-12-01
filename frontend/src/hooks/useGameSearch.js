@@ -2,7 +2,16 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
 
+// Search configuration constants
 const DEBOUNCE_DELAY_MS = 300;
+const MAX_SUGGESTIONS = 6;
+const FUSE_CONFIG = {
+  TITLE_WEIGHT: 0.7,
+  DEVELOPER_WEIGHT: 0.3,
+  THRESHOLD: 0.4,        // Lower = stricter matching, higher = more fuzzy
+  DISTANCE: 100,
+  MIN_MATCH_LENGTH: 1,
+};
 
 const useGameSearch = () => {
   const [games, setGames] = useState([]);
@@ -35,13 +44,13 @@ const useGameSearch = () => {
   const fuse = useMemo(() => {
     return new Fuse(games, {
       keys: [
-        { name: "title", weight: 0.7 },
-        { name: "developer", weight: 0.3 },
+        { name: "title", weight: FUSE_CONFIG.TITLE_WEIGHT },
+        { name: "developer", weight: FUSE_CONFIG.DEVELOPER_WEIGHT },
       ],
-      threshold: 0.4, // Lower = stricter matching, higher = more fuzzy
-      distance: 100,
+      threshold: FUSE_CONFIG.THRESHOLD,
+      distance: FUSE_CONFIG.DISTANCE,
       includeScore: true,
-      minMatchCharLength: 1,
+      minMatchCharLength: FUSE_CONFIG.MIN_MATCH_LENGTH,
     });
   }, [games]);
 
@@ -61,8 +70,8 @@ const useGameSearch = () => {
     // Set up debounced search
     debounceTimerRef.current = setTimeout(() => {
       const results = fuse.search(searchQuery);
-      // Get top 6 suggestions with their match info
-      const topSuggestions = results.slice(0, 6).map((result) => ({
+      // Get top suggestions with their match info
+      const topSuggestions = results.slice(0, MAX_SUGGESTIONS).map((result) => ({
         ...result.item,
         score: result.score,
         matchedField: result.matches?.[0]?.key || "title",
