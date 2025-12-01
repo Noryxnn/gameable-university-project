@@ -64,6 +64,12 @@ const Navbar = ({
     setIsMenuOpen(false);
   };
 
+  const handleHomeNavigation = () => {
+    clearSearch();
+    setIsMenuOpen(false);
+    navigate("/home");
+  };
+
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
     setShowSuggestions(true);
@@ -200,7 +206,7 @@ const Navbar = ({
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo - Left Side */}
           <button
-            onClick={() => navigate("/home")}
+            onClick={handleHomeNavigation}
             className="text-2xl font-bold text-white hover:scale-105 transition-transform flex items-center gap-2 sm:gap-3 group flex-shrink-0"
             aria-label="Go to home page"
           >
@@ -219,7 +225,7 @@ const Navbar = ({
             {user ? (
               <>
                 <button
-                  onClick={() => navigate("/home")}
+                  onClick={handleHomeNavigation}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
                     isActive("/home")
                       ? "bg-purple-600/30 text-purple-300"
@@ -437,7 +443,7 @@ const Navbar = ({
                 {user ? (
                   <>
                     <button
-                      onClick={() => handleNavigation("/home")}
+                      onClick={handleHomeNavigation}
                       className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
                         isActive("/home")
                           ? "bg-purple-600/30 text-purple-300"
