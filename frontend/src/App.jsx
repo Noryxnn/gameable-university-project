@@ -32,6 +32,8 @@ function App() {
     loading: gamesLoading,
     searchQuery,
     setSearchQuery,
+    activeSearch,
+    commitSearch,
     suggestions,
     clearSearch,
   } = useGameSearch();
@@ -78,6 +80,7 @@ function App() {
         setSearchQuery={setSearchQuery}
         suggestions={suggestions}
         clearSearch={clearSearch}
+        commitSearch={commitSearch}
       />
       <Routes>
         <Route path="/" element={<Navigate to="/home" replace />} />
@@ -89,7 +92,7 @@ function App() {
               games={games}
               filteredGames={filteredGames}
               gamesLoading={gamesLoading}
-              searchQuery={searchQuery}
+              activeSearch={activeSearch}
               clearSearch={clearSearch}
             />
           } 

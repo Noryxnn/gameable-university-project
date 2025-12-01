@@ -9,7 +9,8 @@ const Navbar = ({
   searchQuery, 
   setSearchQuery, 
   suggestions, 
-  clearSearch 
+  clearSearch,
+  commitSearch 
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,6 +71,8 @@ const Navbar = ({
     if (e) e.preventDefault();
     setShowSuggestions(false);
     setSelectedIndex(-1);
+    // Commit the search to filter results
+    commitSearch();
     // Navigate to home if not already there to show search results
     if (location.pathname !== "/home") {
       navigate("/home");

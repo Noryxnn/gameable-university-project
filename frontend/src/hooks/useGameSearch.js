@@ -1,12 +1,16 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
+
+const DEBOUNCE_DELAY_MS = 300;
 
 const useGameSearch = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(""); // Live typing value (for suggestions)
+  const [activeSearch, setActiveSearch] = useState(""); // Committed search (for filtering games)
   const [suggestions, setSuggestions] = useState([]);
+  const debounceTimerRef = useRef(null);
 
   // Fetch all games on mount
   useEffect(() => {
@@ -38,35 +42,57 @@ const useGameSearch = () => {
     });
   }, [games]);
 
-  // Perform fuzzy search and update suggestions
+  // Perform fuzzy search and update suggestions (debounced)
   useEffect(() => {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // If empty query, clear suggestions immediately (no delay needed)
     if (!searchQuery.trim()) {
       setSuggestions([]);
       return;
     }
 
-    const results = fuse.search(searchQuery);
-    // Get top 6 suggestions with their match info
-    const topSuggestions = results.slice(0, 6).map((result) => ({
-      ...result.item,
-      score: result.score,
-      matchedField: result.matches?.[0]?.key || "title",
-    }));
-    setSuggestions(topSuggestions);
+    // Set up debounced search
+    debounceTimerRef.current = setTimeout(() => {
+      const results = fuse.search(searchQuery);
+      // Get top 6 suggestions with their match info
+      const topSuggestions = results.slice(0, 6).map((result) => ({
+        ...result.item,
+        score: result.score,
+        matchedField: result.matches?.[0]?.key || "title",
+      }));
+      setSuggestions(topSuggestions);
+    }, DEBOUNCE_DELAY_MS);
+
+    // Cleanup: clear timer on unmount or when dependencies change
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   }, [searchQuery, fuse]);
 
-  // Get filtered games based on current search
+  // Get filtered games based on COMMITTED search (activeSearch), not live typing
   const filteredGames = useMemo(() => {
-    if (!searchQuery.trim()) {
+    if (!activeSearch.trim()) {
       return games;
     }
-    const results = fuse.search(searchQuery);
+    const results = fuse.search(activeSearch);
     return results.map((result) => result.item);
-  }, [searchQuery, games, fuse]);
+  }, [activeSearch, games, fuse]);
+
+  // Commit the search (called when user presses Enter)
+  const commitSearch = () => {
+    setActiveSearch(searchQuery);
+  };
 
   // Clear search
   const clearSearch = () => {
     setSearchQuery("");
+    setActiveSearch("");
     setSuggestions([]);
   };
 
@@ -76,10 +102,11 @@ const useGameSearch = () => {
     loading,
     searchQuery,
     setSearchQuery,
+    activeSearch, // The committed search term (for display purposes)
+    commitSearch, // Function to commit the search
     suggestions,
     clearSearch,
   };
 };
 
 export default useGameSearch;
-

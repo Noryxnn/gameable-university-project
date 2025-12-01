@@ -4,7 +4,7 @@ import axios from "axios";
 import { FaFilter, FaTimes, FaMicrophone, FaClosedCaptioning, FaMousePointer, FaEye, FaPalette, FaHeart, FaRegHeart } from "react-icons/fa";
 import { HiXMark } from "react-icons/hi2";
 
-const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, searchQuery, clearSearch }) => {
+const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, activeSearch, clearSearch }) => {
   const navigate = useNavigate();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [showFilters, setShowFilters] = useState(false);
@@ -135,7 +135,7 @@ const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, s
 
   const totalGames = games?.length || 0;
   const hasActiveFilters = Object.values(filters).some(f => f);
-  const isSearching = searchQuery && searchQuery.trim().length > 0;
+  const isSearching = activeSearch && activeSearch.trim().length > 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900">
@@ -175,7 +175,7 @@ const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, s
           <div className="mb-6 p-4 bg-purple-900/30 border-2 border-purple-500/30 rounded-xl flex items-center justify-between">
             <div>
               <span className="text-white/70">Showing results for: </span>
-              <span className="text-pink-400 font-bold">"{searchQuery}"</span>
+              <span className="text-pink-400 font-bold">"{activeSearch}"</span>
               <span className="text-white/50 ml-2">({filteredGames.length} {filteredGames.length === 1 ? 'game' : 'games'})</span>
             </div>
             <button
@@ -348,7 +348,7 @@ const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, s
             <h3 className="text-2xl font-bold text-white mb-2">No games found</h3>
             <p className="text-white/70 mb-4">
               {isSearching 
-                ? `No games match your search for "${searchQuery}". Try different keywords or clear your filters.`
+                ? `No games match your search for "${activeSearch}". Try different keywords or clear your filters.`
                 : "No games match your current filters. Try adjusting your accessibility filters to see more results."}
             </p>
             {(hasActiveFilters || isSearching) && (
