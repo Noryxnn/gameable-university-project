@@ -4,7 +4,7 @@ import axios from "axios";
 import { FaFilter, FaTimes, FaMicrophone, FaClosedCaptioning, FaMousePointer, FaEye, FaPalette, FaHeart, FaRegHeart } from "react-icons/fa";
 import { HiXMark } from "react-icons/hi2";
 
-const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, activeSearch, clearSearch }) => {
+const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, gamesError, activeSearch, clearSearch }) => {
   const navigate = useNavigate();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [showFilters, setShowFilters] = useState(false);
@@ -129,6 +129,17 @@ const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, a
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center">
         <div className="text-white text-xl">Loading games...</div>
+      </div>
+    );
+  }
+
+  if (gamesError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center">
+        <div className="text-center p-8 bg-black/40 border-2 border-red-500/40 rounded-2xl max-w-md">
+          <div className="text-5xl mb-4">⚠️</div>
+          <p className="text-red-400 text-lg font-semibold">Could not load games. Please try again.</p>
+        </div>
       </div>
     );
   }

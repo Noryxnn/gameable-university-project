@@ -30,6 +30,7 @@ function App() {
     games,
     filteredGames,
     loading: gamesLoading,
+    error: gamesError,
     searchQuery,
     setSearchQuery,
     activeSearch,
@@ -92,6 +93,7 @@ function App() {
               games={games}
               filteredGames={filteredGames}
               gamesLoading={gamesLoading}
+              gamesError={gamesError}
               activeSearch={activeSearch}
               clearSearch={clearSearch}
             />

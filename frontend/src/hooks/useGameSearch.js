@@ -7,6 +7,7 @@ const DEBOUNCE_DELAY_MS = 300;
 const useGameSearch = () => {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false); // Error state for API failures
   const [searchQuery, setSearchQuery] = useState(""); // Live typing value (for suggestions)
   const [activeSearch, setActiveSearch] = useState(""); // Committed search (for filtering games)
   const [suggestions, setSuggestions] = useState([]);
@@ -17,10 +18,12 @@ const useGameSearch = () => {
     const fetchGames = async () => {
       try {
         setLoading(true);
+        setError(false);
         const res = await axios.get("/api/games");
         setGames(res.data || []);
       } catch (err) {
         console.error("Error fetching games:", err);
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -100,6 +103,7 @@ const useGameSearch = () => {
     games,
     filteredGames,
     loading,
+    error, // Error state for API failures
     searchQuery,
     setSearchQuery,
     activeSearch, // The committed search term (for display purposes)
