@@ -63,6 +63,7 @@ const useGameSearch = () => {
   useEffect(() => {
     fetchAllGames();
     fetchGames(); // Also fetch filtered games (initially empty filters = all games)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Configure Fuse.js for fuzzy search (use allGames for suggestions)

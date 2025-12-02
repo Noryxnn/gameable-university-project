@@ -230,7 +230,7 @@ const GameFilters = ({
         <div>
           <h3 className="text-lg font-bold text-white mb-3">Genre</h3>
           <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
-            {allGenresToShow.map(({ name, hasGames }) => {
+            {allGenresToShow.map(({ name }) => {
               const isSelected = selectedGenres.includes(name);
               return (
                 <button

@@ -42,7 +42,6 @@ function App() {
     commitSearch,
     suggestions,
     clearSearch,
-    refreshGames,
     fetchGamesWithFilters,
   } = useGameSearch();
   
@@ -137,14 +136,12 @@ function App() {
           element={
             <Home 
               user={user} 
-              games={games}
               allGames={allGames}
               filteredGames={filteredGames}
               gamesLoading={gamesLoading}
               gamesError={gamesError}
               activeSearch={activeSearch}
               clearSearch={clearSearch}
-              fetchGamesWithFilters={fetchGamesWithFilters}
             />
           } 
         />

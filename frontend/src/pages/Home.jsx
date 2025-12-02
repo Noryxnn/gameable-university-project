@@ -14,14 +14,12 @@ import { SORT_OPTIONS, RATING_FILTERS } from "../utils/gameConstants";
 
 const Home = ({
   user,
-  games,
   allGames = [],
   filteredGames: searchFilteredGames,
   gamesLoading,
   gamesError,
   activeSearch,
   clearSearch,
-  fetchGamesWithFilters,
 }) => {
   const navigate = useNavigate();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
