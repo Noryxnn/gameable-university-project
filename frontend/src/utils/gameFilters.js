@@ -72,6 +72,7 @@ export const deriveAvailableGenres = (games) => {
 
 /**
  * Derives unique, sorted array of accessibility features from games array.
+ * Excludes "Colorblind Mode" and "One-Handed Mode" from filter options.
  * 
  * @param {Object[]} games - Array of game objects
  * @returns {string[]} Sorted array of unique accessibility feature strings
@@ -82,12 +83,17 @@ export const deriveAvailableAccessibilityFeatures = (games) => {
   }
 
   const featuresSet = new Set();
+  const excludedFeatures = ['Colorblind Mode', 'One-Handed Mode'];
   
   games.forEach(game => {
     if (Array.isArray(game.accessibilityFeatures)) {
       game.accessibilityFeatures.forEach(feature => {
-        if (feature && typeof feature === 'string' && feature.trim()) {
-          featuresSet.add(feature.trim());
+        if (feature && typeof feature === 'string') {
+          const trimmedFeature = feature.trim();
+          // Exclude Colorblind Mode and One-Handed Mode from filter options
+          if (!excludedFeatures.includes(trimmedFeature)) {
+            featuresSet.add(trimmedFeature);
+          }
         }
       });
     }
