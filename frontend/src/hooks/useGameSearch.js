@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
 
@@ -15,6 +15,7 @@ const FUSE_CONFIG = {
 
 const useGameSearch = () => {
   const [games, setGames] = useState([]);
+  const [allGames, setAllGames] = useState([]); // All games for search suggestions
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false); // Error state for API failures
   const [searchQuery, setSearchQuery] = useState(""); // Live typing value (for suggestions)
@@ -22,12 +23,23 @@ const useGameSearch = () => {
   const [suggestions, setSuggestions] = useState([]);
   const debounceTimerRef = useRef(null);
 
-  // Fetch all games
-  const fetchGames = async () => {
+  // Fetch games with optional filters
+  const fetchGames = useCallback(async (filters = {}) => {
     try {
       setLoading(true);
       setError(false);
-      const res = await axios.get("/api/games");
+      
+      // Build query string from filters
+      const params = new URLSearchParams();
+      if (filters.genres && filters.genres.length > 0) {
+        params.append('genres', filters.genres.join(','));
+      }
+      if (filters.accessibility && filters.accessibility.length > 0) {
+        params.append('accessibility', filters.accessibility.join(','));
+      }
+
+      const url = `/api/games${params.toString() ? `?${params.toString()}` : ''}`;
+      const res = await axios.get(url);
       setGames(res.data || []);
     } catch (err) {
       console.error("Error fetching games:", err);
@@ -35,16 +47,28 @@ const useGameSearch = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Fetch all games on mount
-  useEffect(() => {
-    fetchGames();
   }, []);
 
-  // Configure Fuse.js for fuzzy search
+  // Fetch all games for search suggestions (unfiltered)
+  const fetchAllGames = async () => {
+    try {
+      const res = await axios.get("/api/games");
+      setAllGames(res.data || []);
+    } catch (err) {
+      console.error("Error fetching all games for search:", err);
+    }
+  };
+
+  // Fetch all games on mount (for search suggestions)
+  useEffect(() => {
+    fetchAllGames();
+    fetchGames(); // Also fetch filtered games (initially empty filters = all games)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Configure Fuse.js for fuzzy search (use allGames for suggestions)
   const fuse = useMemo(() => {
-    return new Fuse(games, {
+    return new Fuse(allGames, {
       keys: [
         { name: "title", weight: FUSE_CONFIG.TITLE_WEIGHT },
         { name: "developer", weight: FUSE_CONFIG.DEVELOPER_WEIGHT },
@@ -54,7 +78,7 @@ const useGameSearch = () => {
       includeScore: true,
       minMatchCharLength: FUSE_CONFIG.MIN_MATCH_LENGTH,
     });
-  }, [games]);
+  }, [allGames]);
 
   // Perform fuzzy search and update suggestions (debounced)
   useEffect(() => {
@@ -90,13 +114,25 @@ const useGameSearch = () => {
   }, [searchQuery, fuse]);
 
   // Get filtered games based on COMMITTED search (activeSearch), not live typing
+  // Search is performed on allGames (all games) since genre/accessibility filters are applied client-side
   const filteredGames = useMemo(() => {
     if (!activeSearch.trim()) {
       return games;
     }
-    const results = fuse.search(activeSearch);
+    // Create a Fuse instance for all games (search should work on all games)
+    const gamesFuse = new Fuse(allGames, {
+      keys: [
+        { name: "title", weight: FUSE_CONFIG.TITLE_WEIGHT },
+        { name: "developer", weight: FUSE_CONFIG.DEVELOPER_WEIGHT },
+      ],
+      threshold: FUSE_CONFIG.THRESHOLD,
+      distance: FUSE_CONFIG.DISTANCE,
+      includeScore: true,
+      minMatchCharLength: FUSE_CONFIG.MIN_MATCH_LENGTH,
+    });
+    const results = gamesFuse.search(activeSearch);
     return results.map((result) => result.item);
-  }, [activeSearch, games, fuse]);
+  }, [activeSearch, allGames, games]);
 
   // Commit the search (called when user presses Enter)
   const commitSearch = () => {
@@ -112,6 +148,7 @@ const useGameSearch = () => {
 
   return {
     games,
+    allGames, // All games (unfiltered) for deriving filter options
     filteredGames,
     loading,
     error, // Error state for API failures
@@ -122,6 +159,7 @@ const useGameSearch = () => {
     suggestions,
     clearSearch,
     refreshGames: fetchGames, // Function to refresh games list
+    fetchGamesWithFilters: fetchGames, // Function to fetch games with filters
   };
 };
 

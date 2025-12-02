@@ -12,7 +12,7 @@ const gameSchema = new mongoose.Schema({
     rating: { type: String, required: true },
     reviewScore: { type: Number, default: 0 }, // Average score out of 5
     reviewCount: { type: Number, default: 0 },
-    accessibilityFeatures: [{ type: String }],
+    accessibilityFeatures: { type: [{ type: String }], default: [] },
     features: [{ type: String }], // Game features list
     downloadLink: { type: String }, // External store link
 }, { timestamps: true });
