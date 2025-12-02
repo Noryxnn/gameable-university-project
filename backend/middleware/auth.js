@@ -15,6 +15,14 @@ export const protect = async (req, res, next) => {
 
       req.user = await User.findById(decoded.id).select("-password");
 
+      // Check if user is banned
+      if (req.user && req.user.isBanned) {
+        return res.status(403).json({ 
+          message: "Your account has been banned. Please contact support.",
+          banned: true 
+        });
+      }
+
       return next();
     } catch (err) {
       console.error("Token verification failed: ", err.message);

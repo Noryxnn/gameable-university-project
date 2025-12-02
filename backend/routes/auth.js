@@ -96,6 +96,15 @@ router.get("/me", protect, async (req, res) => {
   try {
     // Ensure user has all required fields
     const user = await User.findById(req.user._id);
+    
+    // Check if user is banned (double check even though protect middleware checks)
+    if (user.isBanned) {
+      return res.status(403).json({ 
+        message: "Your account has been banned. Please contact support.",
+        banned: true 
+      });
+    }
+    
     if (!user.gamingPlatforms) {
       user.gamingPlatforms = {
         steam: "",
