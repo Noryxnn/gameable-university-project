@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaSave, FaTimes, FaCheck, FaYoutube } from "react-icons/fa";
@@ -27,15 +27,7 @@ const AdminGameApproval = ({ user }) => {
     downloadLink: "",
   });
 
-  useEffect(() => {
-    if (!user || !user.isAdmin) {
-      navigate("/home");
-      return;
-    }
-    fetchRequest();
-  }, [user, requestId, navigate]);
-
-  const fetchRequest = async () => {
+  const fetchRequest = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get(`/api/game-requests/${requestId}`, {
@@ -64,7 +56,15 @@ const AdminGameApproval = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [requestId]);
+
+  useEffect(() => {
+    if (!user || !user.isAdmin) {
+      navigate("/home");
+      return;
+    }
+    fetchRequest();
+  }, [user, requestId, navigate, fetchRequest]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -166,7 +166,7 @@ const AdminGameApproval = ({ user }) => {
       };
 
       // Create the game
-      const gameRes = await axios.post("/api/games", gameData, {
+      await axios.post("/api/games", gameData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

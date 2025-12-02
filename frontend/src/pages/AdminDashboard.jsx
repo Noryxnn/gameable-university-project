@@ -23,17 +23,27 @@ const AdminDashboard = ({ user }) => {
   const [requestCount, setRequestCount] = useState(0);
 
   useEffect(() => {
-    if (!user || !user.isAdmin) {
+    if (!user) {
+      console.log("AdminDashboard: No user found, redirecting to home");
       navigate("/home");
       return;
     }
+    if (!user.isAdmin) {
+      console.log("AdminDashboard: User is not an admin, redirecting to home", { 
+        userId: user._id, 
+        username: user.username, 
+        isAdmin: user.isAdmin 
+      });
+      navigate("/home");
+      return;
+    }
+    console.log("AdminDashboard: User is admin, loading dashboard", { 
+      userId: user._id, 
+      username: user.username 
+    });
     fetchUsers();
     fetchRequestCount();
   }, [user, navigate]);
-
-  useEffect(() => {
-    filterUsers();
-  }, [users, searchQuery, filter]);
 
   const fetchUsers = async () => {
     try {
@@ -64,7 +74,8 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
-  const filterUsers = () => {
+  // Filter users based on search query and filter status
+  useEffect(() => {
     let filtered = users;
 
     // Apply status filter
@@ -85,7 +96,7 @@ const AdminDashboard = ({ user }) => {
     }
 
     setFilteredUsers(filtered);
-  };
+  }, [users, searchQuery, filter]);
 
   const handleBanUser = async (userId, isBanned) => {
     if (!window.confirm(`Are you sure you want to ${isBanned ? 'unban' : 'ban'} this user?`)) {

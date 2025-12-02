@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaSearch, FaUserPlus, FaUserMinus, FaUser, FaUsers, FaTimes } from 'react-icons/fa';
@@ -21,6 +21,26 @@ const Social = ({ user }) => {
     }
   }, [user]);
 
+  const searchUsers = useCallback(async () => {
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    try {
+      setIsSearching(true);
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`/api/users/search?q=${encodeURIComponent(searchQuery)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSearchResults(res.data.users || []);
+    } catch (err) {
+      console.error('Error searching users:', err);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, [searchQuery]);
+
   useEffect(() => {
     if (searchQuery.length >= 2) {
       const debounceTimer = setTimeout(() => {
@@ -30,7 +50,7 @@ const Social = ({ user }) => {
     } else {
       setSearchResults([]);
     }
-  }, [searchQuery]);
+  }, [searchQuery, searchUsers]);
 
   const loadFriends = async () => {
     try {
@@ -46,22 +66,6 @@ const Social = ({ user }) => {
       console.error('Error loading friends:', err);
       setError('Failed to load friends');
       setLoading(false);
-    }
-  };
-
-  const searchUsers = async () => {
-    setIsSearching(true);
-    try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get(`/api/users/search?q=${encodeURIComponent(searchQuery)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setSearchResults(res.data.users || []);
-    } catch (err) {
-      console.error('Error searching users:', err);
-      setError('Failed to search users');
-    } finally {
-      setIsSearching(false);
     }
   };
 

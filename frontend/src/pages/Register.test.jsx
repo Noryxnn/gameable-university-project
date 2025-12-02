@@ -138,7 +138,7 @@ describe("Register Component", () => {
       };
       axios.post.mockResolvedValue(mockResponse);
 
-      const { mockSetUser } = renderRegister();
+      renderRegister();
 
       const usernameInput = screen.getByPlaceholderText(/enter your username/i);
       const emailInput = screen.getByPlaceholderText(/enter your email/i);

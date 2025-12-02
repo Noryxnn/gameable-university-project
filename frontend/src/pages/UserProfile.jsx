@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FaUser, FaArrowLeft, FaGamepad, FaXbox, FaPlaystation, FaFacebook, FaInstagram, FaUserPlus, FaUserCheck, FaUserClock, FaUserMinus, FaBan, FaTrash, FaCheckCircle } from 'react-icons/fa';
@@ -13,16 +13,7 @@ const UserProfile = ({ user: currentUser }) => {
   const [friendStatus, setFriendStatus] = useState('none'); // 'none', 'friends', 'request_sent', 'request_received'
   const [friendActionLoading, setFriendActionLoading] = useState(false);
 
-  useEffect(() => {
-    if (userId) {
-      fetchUserProfile();
-      if (currentUser) {
-        checkFriendStatus();
-      }
-    }
-  }, [userId, currentUser]);
-
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
@@ -36,9 +27,9 @@ const UserProfile = ({ user: currentUser }) => {
       setError(err.response?.data?.message || 'Failed to load user profile');
       setLoading(false);
     }
-  };
+  }, [userId]);
 
-  const checkFriendStatus = async () => {
+  const checkFriendStatus = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.get('/api/users/friends/list', {
@@ -59,7 +50,16 @@ const UserProfile = ({ user: currentUser }) => {
     } catch (err) {
       console.error('Error checking friend status:', err);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserProfile();
+      if (currentUser) {
+        checkFriendStatus();
+      }
+    }
+  }, [userId, currentUser, fetchUserProfile, checkFriendStatus]);
 
   const sendFriendRequest = async () => {
     try {

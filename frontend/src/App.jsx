@@ -41,7 +41,6 @@ function App() {
     commitSearch,
     suggestions,
     clearSearch,
-    refreshGames,
   } = useGameSearch();
   
   // Axios interceptor to handle banned users globally
