@@ -32,6 +32,7 @@ function App() {
   // Game search hook
   const {
     games,
+    allGames,
     filteredGames,
     loading: gamesLoading,
     error: gamesError,
@@ -42,6 +43,7 @@ function App() {
     suggestions,
     clearSearch,
     refreshGames,
+    fetchGamesWithFilters,
   } = useGameSearch();
   
   // Axios interceptor to handle banned users globally
@@ -136,11 +138,13 @@ function App() {
             <Home 
               user={user} 
               games={games}
+              allGames={allGames}
               filteredGames={filteredGames}
               gamesLoading={gamesLoading}
               gamesError={gamesError}
               activeSearch={activeSearch}
               clearSearch={clearSearch}
+              fetchGamesWithFilters={fetchGamesWithFilters}
             />
           } 
         />
