@@ -39,12 +39,14 @@ install_backend:
     paths:
       - ${BACKEND_DIR}/node_modules/
     expire_in: 1 hour
-  only:
-    changes:
-      - ${BACKEND_DIR}/**/*
-      - ${BACKEND_DIR}/package.json
-      - ${BACKEND_DIR}/package-lock.json
-      - .gitlab-ci.yml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: always
+    - changes:
+        - ${BACKEND_DIR}/**/*
+        - ${BACKEND_DIR}/package.json
+        - ${BACKEND_DIR}/package-lock.json
+        - .gitlab-ci.yml
 
 install_frontend:
   stage: install
@@ -57,12 +59,14 @@ install_frontend:
     paths:
       - ${FRONTEND_DIR}/node_modules/
     expire_in: 1 hour
-  only:
-    changes:
-      - ${FRONTEND_DIR}/**/*
-      - ${FRONTEND_DIR}/package.json
-      - ${FRONTEND_DIR}/package-lock.json
-      - .gitlab-ci.yml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: always
+    - changes:
+        - ${FRONTEND_DIR}/**/*
+        - ${FRONTEND_DIR}/package.json
+        - ${FRONTEND_DIR}/package-lock.json
+        - .gitlab-ci.yml
 
 # ============================================
 # LINT STAGE - Code Quality Checks
@@ -78,12 +82,14 @@ lint_frontend:
     - echo "🔍 Running ESLint on frontend..."
     - npm run lint
   allow_failure: false
-  only:
-    changes:
-      - ${FRONTEND_DIR}/**/*
-      - ${FRONTEND_DIR}/package.json
-      - ${FRONTEND_DIR}/eslint.config.js
-      - .gitlab-ci.yml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: always
+    - changes:
+        - ${FRONTEND_DIR}/**/*
+        - ${FRONTEND_DIR}/package.json
+        - ${FRONTEND_DIR}/eslint.config.js
+        - .gitlab-ci.yml
 
 # ============================================
 # TEST STAGE - Run Automated Tests
@@ -124,12 +130,14 @@ test_backend:
       junit: ${BACKEND_DIR}/coverage/junit.xml
     expire_in: 1 week
   coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
-  only:
-    changes:
-      - ${BACKEND_DIR}/**/*
-      - ${BACKEND_DIR}/package.json
-      - ${BACKEND_DIR}/vitest.config.js
-      - .gitlab-ci.yml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: always
+    - changes:
+        - ${BACKEND_DIR}/**/*
+        - ${BACKEND_DIR}/package.json
+        - ${BACKEND_DIR}/vitest.config.js
+        - .gitlab-ci.yml
 
 test_frontend:
   stage: test
@@ -158,12 +166,14 @@ test_frontend:
       junit: ${FRONTEND_DIR}/coverage/junit.xml
     expire_in: 1 week
   coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
-  only:
-    changes:
-      - ${FRONTEND_DIR}/**/*
-      - ${FRONTEND_DIR}/package.json
-      - ${FRONTEND_DIR}/vite.config.js
-      - .gitlab-ci.yml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: always
+    - changes:
+        - ${FRONTEND_DIR}/**/*
+        - ${FRONTEND_DIR}/package.json
+        - ${FRONTEND_DIR}/vite.config.js
+        - .gitlab-ci.yml
 
 # ============================================
 # BUILD STAGE - Build Application
@@ -188,12 +198,14 @@ build_frontend:
     paths:
       - ${FRONTEND_DIR}/dist/
     expire_in: 1 week
-  only:
-    changes:
-      - ${FRONTEND_DIR}/**/*
-      - ${FRONTEND_DIR}/package.json
-      - ${FRONTEND_DIR}/vite.config.js
-      - .gitlab-ci.yml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+      when: always
+    - changes:
+        - ${FRONTEND_DIR}/**/*
+        - ${FRONTEND_DIR}/package.json
+        - ${FRONTEND_DIR}/vite.config.js
+        - .gitlab-ci.yml
 
 # ============================================
 # OPTIONAL: Manual Test Job (for debugging)
