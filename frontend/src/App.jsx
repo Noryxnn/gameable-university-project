@@ -12,6 +12,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import GoogleCallback from "./pages/GoogleCallback";
 import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import RequestGame from "./pages/RequestGame";
 import Social from "./pages/Social";
 import UserProfile from "./pages/UserProfile";
@@ -167,6 +168,10 @@ function App() {
         <Route
           path="/profile"
           element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/settings"
+          element={user ? <Settings user={user} /> : <Navigate to="/login" />}
         />
         <Route
           path="/request-game"
