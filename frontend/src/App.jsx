@@ -31,7 +31,7 @@ function App() {
   
   // Game search hook
   const {
-    games,
+    allGames,
     filteredGames,
     loading: gamesLoading,
     error: gamesError,
@@ -134,7 +134,7 @@ function App() {
           element={
             <Home 
               user={user} 
-              games={games}
+              allGames={allGames}
               filteredGames={filteredGames}
               gamesLoading={gamesLoading}
               gamesError={gamesError}

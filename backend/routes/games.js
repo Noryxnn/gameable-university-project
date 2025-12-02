@@ -1,13 +1,22 @@
 import express from 'express';
 import Game from '../models/Game.js';
 import { protect, admin } from '../middleware/auth.js';
+import { buildGameFilterQuery, parseFilterParam } from '../utils/gameFilters.js';
 
 const router = express.Router();
 
-// Get all games
+// Get all games with optional filtering by genre and accessibility features
 router.get('/', async (req, res) => {
     try {
-        const games = await Game.find().sort({ createdAt: -1 });
+        // Parse query parameters
+        const genres = parseFilterParam(req.query.genres);
+        const accessibilityFeatures = parseFilterParam(req.query.accessibility);
+
+        // Build filter query
+        const filterQuery = buildGameFilterQuery(genres, accessibilityFeatures);
+
+        // Fetch games with filters applied
+        const games = await Game.find(filterQuery).sort({ createdAt: -1 });
         res.json(games);
     } catch (error) {
         res.status(500).json({ message: error.message });
