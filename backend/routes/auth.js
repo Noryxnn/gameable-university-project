@@ -1,5 +1,6 @@
 import express from "express";
 import passport from "passport";
+import { googleOAuthEnabled } from "../config/passport.js";
 import User from "../models/User.js";
 import Game from "../models/Game.js";
 import { protect, admin } from "../middleware/auth.js";
@@ -109,12 +110,22 @@ router.post("/login", async (req, res) => {
   }
 });
 
+// Middleware to check if Google OAuth is configured and enabled
+const checkGoogleOAuth = (req, res, next) => {
+  if (!googleOAuthEnabled) {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    return res.redirect(`${frontendUrl}/login?error=google_oauth_not_configured`);
+  }
+  next();
+};
+
 // Google OAuth - Initiate authentication
-router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get("/auth/google", checkGoogleOAuth, passport.authenticate("google", { scope: ["profile", "email"] }));
 
 // Google OAuth - Callback handler
 router.get(
   "/auth/google/callback",
+  checkGoogleOAuth,
   passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=google_auth_failed` }),
   async (req, res) => {
     try {
@@ -641,6 +652,14 @@ router.post("/forgot-password", async (req, res) => {
 
     if (!user) {
       // Don't reveal if user exists or not for security
+      return res.status(200).json({ 
+        message: "If that email exists, a password reset link has been sent" 
+      });
+    }
+
+    // Check if user signed up with Google OAuth
+    if (user.authProvider === "google" || !user.password) {
+      // Don't reveal the exact reason for security, but don't send email
       return res.status(200).json({ 
         message: "If that email exists, a password reset link has been sent" 
       });

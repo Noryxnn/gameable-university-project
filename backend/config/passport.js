@@ -1,14 +1,35 @@
+import dotenv from "dotenv";
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "../models/User.js";
 
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: process.env.GOOGLE_CALLBACK_URL || "/api/users/auth/google/callback",
-    },
+// Load environment variables (in case this module is imported before dotenv.config() in server.js)
+dotenv.config();
+
+// Flag to track if Google OAuth is enabled
+let googleOAuthEnabled = false;
+
+// Debug: Check if environment variables are loaded
+const hasClientID = !!process.env.GOOGLE_CLIENT_ID;
+const hasClientSecret = !!process.env.GOOGLE_CLIENT_SECRET;
+
+// Only initialize Google OAuth strategy if credentials are configured
+if (hasClientID && hasClientSecret) {
+  googleOAuthEnabled = true;
+  console.log("✅ Google OAuth enabled successfully");
+  // Ensure callback URL is absolute
+  const callbackURL = process.env.GOOGLE_CALLBACK_URL || 
+    `${process.env.BACKEND_URL || "http://localhost:5050"}/api/users/auth/google/callback`;
+  
+  console.log(`🔗 Google OAuth Callback URL: ${callbackURL}`);
+  
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: callbackURL,
+      },
     async (accessToken, refreshToken, profile, done) => {
       try {
         // Check if user already exists with this Google ID
@@ -60,8 +81,14 @@ passport.use(
         return done(error, null);
       }
     }
-  )
-);
+    )
+  );
+} else {
+  console.warn("⚠️  Google OAuth credentials not configured. Google login will be disabled.");
+  console.warn("   To enable, set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file");
+  console.warn(`   GOOGLE_CLIENT_ID: ${hasClientID ? "✅ Set" : "❌ Missing"}`);
+  console.warn(`   GOOGLE_CLIENT_SECRET: ${hasClientSecret ? "✅ Set" : "❌ Missing"}`);
+}
 
 // Serialize user for session
 passport.serializeUser((user, done) => {
@@ -79,4 +106,5 @@ passport.deserializeUser(async (id, done) => {
 });
 
 export default passport;
+export { googleOAuthEnabled };
 
