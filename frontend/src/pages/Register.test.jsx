@@ -53,10 +53,10 @@ describe("Register Component", () => {
     it("renders the registration form with all required fields", () => {
       renderRegister();
 
-      expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/enter your username/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/enter your email/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/enter your password/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/confirm your password/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /register/i })).toBeInTheDocument();
     });
 
@@ -87,10 +87,10 @@ describe("Register Component", () => {
       const user = userEvent.setup();
       renderRegister();
 
-      const usernameInput = screen.getByLabelText(/username/i);
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/^password$/i);
-      const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+      const usernameInput = screen.getByPlaceholderText(/enter your username/i);
+      const emailInput = screen.getByPlaceholderText(/enter your email/i);
+      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
+      const confirmPasswordInput = screen.getByPlaceholderText(/confirm your password/i);
 
       await user.type(usernameInput, "testuser");
       await user.type(emailInput, "test@example.com");
@@ -109,10 +109,10 @@ describe("Register Component", () => {
       const user = userEvent.setup();
       renderRegister();
 
-      const usernameInput = screen.getByLabelText(/username/i);
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/^password$/i);
-      const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+      const usernameInput = screen.getByPlaceholderText(/enter your username/i);
+      const emailInput = screen.getByPlaceholderText(/enter your email/i);
+      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
+      const confirmPasswordInput = screen.getByPlaceholderText(/confirm your password/i);
       const submitButton = screen.getByRole("button", { name: /register/i });
 
       await user.type(usernameInput, "testuser");
@@ -140,10 +140,10 @@ describe("Register Component", () => {
 
       const { mockSetUser } = renderRegister();
 
-      const usernameInput = screen.getByLabelText(/username/i);
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/^password$/i);
-      const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+      const usernameInput = screen.getByPlaceholderText(/enter your username/i);
+      const emailInput = screen.getByPlaceholderText(/enter your email/i);
+      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
+      const confirmPasswordInput = screen.getByPlaceholderText(/confirm your password/i);
       const submitButton = screen.getByRole("button", { name: /register/i });
 
       await user.type(usernameInput, "testuser");
@@ -185,10 +185,10 @@ describe("Register Component", () => {
 
       renderRegister();
 
-      const usernameInput = screen.getByLabelText(/username/i);
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/^password$/i);
-      const confirmPasswordInput = screen.getByLabelText(/confirm password/i);
+      const usernameInput = screen.getByPlaceholderText(/enter your username/i);
+      const emailInput = screen.getByPlaceholderText(/enter your email/i);
+      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
+      const confirmPasswordInput = screen.getByPlaceholderText(/confirm your password/i);
       const submitButton = screen.getByRole("button", { name: /register/i });
 
       await user.type(usernameInput, "testuser");

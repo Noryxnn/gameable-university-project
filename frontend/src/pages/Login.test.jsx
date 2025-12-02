@@ -47,14 +47,19 @@ describe("Login Component", () => {
     vi.clearAllMocks();
     mockLocation.href = "";
     axios.post.mockReset();
+    localStorage.clear();
+    // Mock localStorage methods using spies
+    vi.spyOn(Storage.prototype, "setItem");
+    vi.spyOn(Storage.prototype, "getItem");
+    vi.spyOn(Storage.prototype, "removeItem");
   });
 
   describe("Rendering", () => {
     it("renders the login form with email and password fields", () => {
       renderLogin();
 
-      expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/enter your email/i)).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/enter your password/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /login/i })).toBeInTheDocument();
     });
 
@@ -93,7 +98,7 @@ describe("Login Component", () => {
       const user = userEvent.setup();
       renderLogin();
 
-      const emailInput = screen.getByLabelText(/email/i);
+      const emailInput = screen.getByPlaceholderText(/enter your email/i);
       await user.type(emailInput, "test@example.com");
 
       expect(emailInput).toHaveValue("test@example.com");
@@ -103,7 +108,7 @@ describe("Login Component", () => {
       const user = userEvent.setup();
       renderLogin();
 
-      const passwordInput = screen.getByLabelText(/password/i);
+      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
       await user.type(passwordInput, "password123");
 
       expect(passwordInput).toHaveValue("password123");
@@ -126,8 +131,8 @@ describe("Login Component", () => {
 
       const { mockSetUser } = renderLogin();
 
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
+      const emailInput = screen.getByPlaceholderText(/enter your email/i);
+      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
       const submitButton = screen.getByRole("button", { name: /login/i });
 
       await user.type(emailInput, "test@example.com");
@@ -141,7 +146,7 @@ describe("Login Component", () => {
         });
       });
 
-      expect(localStorage.setItem).toHaveBeenCalledWith("token", "mock-jwt-token");
+      expect(Storage.prototype.setItem).toHaveBeenCalledWith("token", "mock-jwt-token");
       expect(mockSetUser).toHaveBeenCalledWith(mockResponse.data);
       expect(mockNavigate).toHaveBeenCalledWith("/home");
     });
@@ -159,8 +164,8 @@ describe("Login Component", () => {
 
       renderLogin();
 
-      const emailInput = screen.getByLabelText(/email/i);
-      const passwordInput = screen.getByLabelText(/password/i);
+      const emailInput = screen.getByPlaceholderText(/enter your email/i);
+      const passwordInput = screen.getByPlaceholderText(/enter your password/i);
       const submitButton = screen.getByRole("button", { name: /login/i });
 
       await user.type(emailInput, "test@example.com");

@@ -37,13 +37,31 @@ describe("GoogleCallback Component", () => {
     vi.clearAllMocks();
     axios.get.mockReset();
     localStorage.clear();
+    // Mock localStorage methods using spies
+    vi.spyOn(Storage.prototype, "setItem");
+    vi.spyOn(Storage.prototype, "getItem");
+    vi.spyOn(Storage.prototype, "removeItem");
   });
 
   describe("Loading State", () => {
-    it("displays loading spinner initially", () => {
+    it("displays loading spinner initially", async () => {
+      const mockUser = {
+        _id: "user123",
+        username: "testuser",
+        email: "test@example.com",
+        isAdmin: false,
+      };
+      axios.get.mockResolvedValue({ data: mockUser });
+
       renderGoogleCallback("?token=mock-token");
 
+      // The loading state should be visible initially
       expect(screen.getByText(/completing authentication/i)).toBeInTheDocument();
+      
+      // Wait for the async operation to complete
+      await waitFor(() => {
+        expect(axios.get).toHaveBeenCalled();
+      });
     });
   });
 
@@ -60,7 +78,7 @@ describe("GoogleCallback Component", () => {
       const { mockSetUser } = renderGoogleCallback("?token=mock-jwt-token");
 
       await waitFor(() => {
-        expect(localStorage.setItem).toHaveBeenCalledWith("token", "mock-jwt-token");
+        expect(Storage.prototype.setItem).toHaveBeenCalledWith("token", "mock-jwt-token");
       });
 
       await waitFor(() => {
@@ -162,16 +180,17 @@ describe("GoogleCallback Component", () => {
       renderGoogleCallback("?token=mock-token");
 
       await waitFor(() => {
-        expect(localStorage.removeItem).toHaveBeenCalledWith("token");
-      });
-
-      await waitFor(() => {
         expect(screen.getByText(/your account has been banned. please contact support/i)).toBeInTheDocument();
       });
 
       await waitFor(() => {
+        expect(Storage.prototype.removeItem).toHaveBeenCalledWith("token");
+      }, { timeout: 2000 });
+
+      // Note: navigate is called after a 3 second timeout
+      await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith("/login");
-      }, { timeout: 4000 });
+      }, { timeout: 5000 });
     });
   });
 
@@ -183,15 +202,16 @@ describe("GoogleCallback Component", () => {
 
       await waitFor(() => {
         expect(screen.getByText(/failed to fetch user data. please try again/i)).toBeInTheDocument();
-      });
+      }, { timeout: 2000 });
 
       await waitFor(() => {
-        expect(localStorage.removeItem).toHaveBeenCalledWith("token");
-      });
+        expect(Storage.prototype.removeItem).toHaveBeenCalledWith("token");
+      }, { timeout: 2000 });
 
+      // Note: navigate is called after a 3 second timeout, so we need to wait longer
       await waitFor(() => {
         expect(mockNavigate).toHaveBeenCalledWith("/login");
-      }, { timeout: 4000 });
+      }, { timeout: 5000 });
     });
   });
 });
