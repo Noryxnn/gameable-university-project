@@ -13,15 +13,6 @@ const UserProfile = ({ user: currentUser }) => {
   const [friendStatus, setFriendStatus] = useState('none'); // 'none', 'friends', 'request_sent', 'request_received'
   const [friendActionLoading, setFriendActionLoading] = useState(false);
 
-  useEffect(() => {
-    if (userId) {
-      fetchUserProfile();
-      if (currentUser) {
-        checkFriendStatus();
-      }
-    }
-  }, [userId, currentUser, fetchUserProfile, checkFriendStatus]);
-
   const fetchUserProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -60,6 +51,15 @@ const UserProfile = ({ user: currentUser }) => {
       console.error('Error checking friend status:', err);
     }
   }, [userId]);
+
+  useEffect(() => {
+    if (userId) {
+      fetchUserProfile();
+      if (currentUser) {
+        checkFriendStatus();
+      }
+    }
+  }, [userId, currentUser, fetchUserProfile, checkFriendStatus]);
 
   const sendFriendRequest = async () => {
     try {

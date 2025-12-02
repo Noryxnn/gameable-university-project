@@ -27,14 +27,6 @@ const AdminGameApproval = ({ user }) => {
     downloadLink: "",
   });
 
-  useEffect(() => {
-    if (!user || !user.isAdmin) {
-      navigate("/home");
-      return;
-    }
-    fetchRequest();
-  }, [user, requestId, navigate, fetchRequest]);
-
   const fetchRequest = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
@@ -65,6 +57,14 @@ const AdminGameApproval = ({ user }) => {
       setLoading(false);
     }
   }, [requestId]);
+
+  useEffect(() => {
+    if (!user || !user.isAdmin) {
+      navigate("/home");
+      return;
+    }
+    fetchRequest();
+  }, [user, requestId, navigate, fetchRequest]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
