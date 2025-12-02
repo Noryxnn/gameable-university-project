@@ -16,12 +16,16 @@ const Login = ({ setUser }) => {
   useEffect(() => {
     const errorParam = searchParams.get("error");
     if (errorParam) {
+      let errorMessage = "";
       if (errorParam === "google_oauth_not_configured") {
-        setError("Google OAuth is not configured. Please use email/password to login.");
+        errorMessage = "Google OAuth is not configured. Please use email/password to login.";
       } else if (errorParam === "google_auth_failed") {
-        setError("Google authentication failed. Please try again.");
+        errorMessage = "Google authentication failed. Please try again.";
       } else if (errorParam === "account_banned") {
-        setError("Your account has been banned. Please contact support.");
+        errorMessage = "Your account has been banned. Please contact support.";
+      }
+      if (errorMessage) {
+        setError(errorMessage);
       }
     }
   }, [searchParams]);

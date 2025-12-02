@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
@@ -32,13 +32,7 @@ const GameDetail = ({ user }) => {
   const [newReview, setNewReview] = useState({ rating: 5, content: "" });
   const [submittingReview, setSubmittingReview] = useState(false);
 
-  useEffect(() => {
-    fetchGame();
-    fetchReviews();
-    checkFavorite();
-  }, [id, user]);
-
-  const fetchGame = async () => {
+  const fetchGame = useCallback(async () => {
     try {
       setLoading(true);
       const res = await axios.get(`/api/games/${id}`);
@@ -48,18 +42,18 @@ const GameDetail = ({ user }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       const res = await axios.get(`/api/reviews/game/${id}`);
       setReviews(res.data);
     } catch (err) {
       console.error("Error fetching reviews:", err);
     }
-  };
+  }, [id]);
 
-  const checkFavorite = async () => {
+  const checkFavorite = useCallback(async () => {
     if (!user) {
       setIsFavorite(false);
       return;
@@ -75,7 +69,13 @@ const GameDetail = ({ user }) => {
       console.error("Error checking favorite:", err);
       setIsFavorite(false);
     }
-  };
+  }, [user, id]);
+
+  useEffect(() => {
+    fetchGame();
+    fetchReviews();
+    checkFavorite();
+  }, [fetchGame, fetchReviews, checkFavorite]);
 
   const toggleFavorite = async () => {
     if (!user) {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { 
@@ -33,7 +33,7 @@ const AdminDashboard = ({ user }) => {
 
   useEffect(() => {
     filterUsers();
-  }, [users, searchQuery, filter]);
+  }, [filterUsers]);
 
   const fetchUsers = async () => {
     try {
@@ -64,7 +64,7 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
-  const filterUsers = () => {
+  const filterUsers = useCallback(() => {
     let filtered = users;
 
     // Apply status filter
@@ -85,7 +85,7 @@ const AdminDashboard = ({ user }) => {
     }
 
     setFilteredUsers(filtered);
-  };
+  }, [users, searchQuery, filter]);
 
   const handleBanUser = async (userId, isBanned) => {
     if (!window.confirm(`Are you sure you want to ${isBanned ? 'unban' : 'ban'} this user?`)) {

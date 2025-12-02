@@ -120,8 +120,7 @@ const RequestGame = ({ user }) => {
       // ALLOWED OFFICIAL SITES - indie developers, game websites
       // Allow any non-blocked domain (indie dev sites like hollowknight.com, stardewvalley.net, etc.)
       // Also allow wordpress.com, wixsite.com, weebly.com for indie devs
-      const allowedPlatforms = ["wordpress.com", "wixsite.com", "weebly.com", "wix.com", "carrd.co", "itch.io", "gamejolt.com"];
-      const isAllowedPlatform = allowedPlatforms.some((p) => hostname.includes(p));
+      // const allowedPlatforms = ["wordpress.com", "wixsite.com", "weebly.com", "wix.com", "carrd.co", "itch.io", "gamejolt.com"];
       
       // If it's not blocked, it's likely an official game site or indie dev site
       return true;
