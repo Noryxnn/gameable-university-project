@@ -1,6 +1,128 @@
-import React from "react";
-import { FaFilter, FaTimes, FaSort } from "react-icons/fa";
+import React, { useState, useRef, useEffect } from "react";
+import { FaFilter, FaTimes, FaSort, FaStar, FaChevronDown } from "react-icons/fa";
 import { ALL_GENRES, SORT_OPTIONS, RATING_FILTERS } from "../utils/gameConstants";
+
+/**
+ * CustomDropdown Component
+ * 
+ * A styled dropdown that matches the theme with custom styling.
+ */
+const CustomDropdown = ({ label, icon, value, onChange, options, colorScheme = "purple" }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const selectedOption = options.find(opt => opt.value === value) || options[0];
+
+  const getColorClasses = (scheme) => {
+    if (scheme === "purple") {
+      return {
+        border: "border-purple-500/30",
+        borderOpen: "border-purple-400",
+        bgSelected: "bg-purple-600/40",
+        text: "text-purple-400",
+        shadow: "shadow-purple-500/30",
+        gradient: "from-purple-600/40 to-pink-600/40",
+      };
+    } else {
+      return {
+        border: "border-pink-500/30",
+        borderOpen: "border-pink-400",
+        bgSelected: "bg-pink-600/40",
+        text: "text-pink-400",
+        shadow: "shadow-pink-500/30",
+        gradient: "from-pink-600/40 to-purple-600/40",
+      };
+    }
+  };
+
+  const colors = getColorClasses(colorScheme);
+
+  const handleSelect = (optionValue) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+        {icon && <span className={colors.text}>{icon}</span>}
+        {label}
+      </h3>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className={`w-full px-4 py-3 bg-black/60 border-2 ${
+            isOpen ? colors.borderOpen : colors.border
+          } text-white rounded-xl font-medium transition-all duration-200 flex items-center justify-between backdrop-blur-sm ${
+            isOpen ? `${colors.bgSelected} shadow-lg ${colors.shadow}` : ""
+          } ${colorScheme === "purple" ? "hover:bg-purple-900/30" : "hover:bg-pink-900/30"}`}
+          aria-expanded={isOpen}
+          aria-haspopup="listbox"
+        >
+          <span className="flex-1 text-left">{selectedOption.label}</span>
+          <FaChevronDown
+            className={`w-4 h-4 ${colors.text} transition-transform duration-200 ${
+              isOpen ? "transform rotate-180" : ""
+            }`}
+          />
+        </button>
+
+        {isOpen && (
+          <div
+            className={`absolute z-50 w-full mt-2 bg-black/90 border-2 ${colors.borderOpen} rounded-xl shadow-2xl ${colors.shadow} backdrop-blur-xl overflow-hidden`}
+            role="listbox"
+          >
+            <div className="max-h-64 overflow-y-auto">
+              {options.map((option) => {
+                const isSelected = option.value === value;
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => handleSelect(option.value)}
+                    className={`w-full text-left px-4 py-3 font-medium transition-all duration-150 ${
+                      isSelected
+                        ? `bg-gradient-to-r ${colors.gradient} text-white shadow-lg ${colors.shadow}`
+                        : `text-white/80 hover:text-white ${
+                            colorScheme === "purple" 
+                              ? "hover:bg-purple-900/30" 
+                              : "hover:bg-pink-900/30"
+                          }`
+                    }`}
+                    role="option"
+                    aria-selected={isSelected}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{option.label}</span>
+                      {isSelected && (
+                        <span className={`${colors.text} text-sm font-bold`}>✓</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 /**
  * GameFilters Component
@@ -71,41 +193,38 @@ const GameFilters = ({
 
       <div className="space-y-6">
         {/* Sort Options */}
-        <div>
-          <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-            <FaSort className="w-4 h-4 text-purple-400" />
-            Sort By
-          </h3>
-          <select
-            value={selectedSort}
-            onChange={(e) => onChangeSelectedSort(e.target.value)}
-            className="w-full px-3 py-2 bg-black/40 border-2 border-purple-500/30 text-white rounded-lg font-medium focus:border-purple-400 focus:outline-none transition-colors"
-          >
-            <option value={SORT_OPTIONS.DEFAULT}>Default</option>
-            <option value={SORT_OPTIONS.TITLE_ASC}>Title (A-Z)</option>
-            <option value={SORT_OPTIONS.TITLE_DESC}>Title (Z-A)</option>
-            <option value={SORT_OPTIONS.RATING_DESC}>Rating (High to Low)</option>
-            <option value={SORT_OPTIONS.RATING_ASC}>Rating (Low to High)</option>
-            <option value={SORT_OPTIONS.RELEASE_YEAR_DESC}>Newest First</option>
-            <option value={SORT_OPTIONS.RELEASE_YEAR_ASC}>Oldest First</option>
-          </select>
-        </div>
+        <CustomDropdown
+          label="Sort By"
+          icon={<FaSort className="w-4 h-4" />}
+          value={selectedSort}
+          onChange={onChangeSelectedSort}
+          options={[
+            { value: SORT_OPTIONS.DEFAULT, label: "Default" },
+            { value: SORT_OPTIONS.TITLE_ASC, label: "Title (A-Z)" },
+            { value: SORT_OPTIONS.TITLE_DESC, label: "Title (Z-A)" },
+            { value: SORT_OPTIONS.RATING_DESC, label: "Rating (High to Low)" },
+            { value: SORT_OPTIONS.RATING_ASC, label: "Rating (Low to High)" },
+            { value: SORT_OPTIONS.RELEASE_YEAR_DESC, label: "Newest First" },
+            { value: SORT_OPTIONS.RELEASE_YEAR_ASC, label: "Oldest First" },
+          ]}
+          colorScheme="purple"
+        />
 
         {/* Rating Filter */}
-        <div>
-          <h3 className="text-lg font-bold text-white mb-3">Rating</h3>
-          <select
-            value={selectedRating}
-            onChange={(e) => onChangeSelectedRating(e.target.value)}
-            className="w-full px-3 py-2 bg-black/40 border-2 border-purple-500/30 text-white rounded-lg font-medium focus:border-purple-400 focus:outline-none transition-colors"
-          >
-            <option value={RATING_FILTERS.ALL}>All Ratings</option>
-            <option value={RATING_FILTERS.E}>E (Everyone)</option>
-            <option value={RATING_FILTERS.E10}>E10+ (Everyone 10+)</option>
-            <option value={RATING_FILTERS.T}>T (Teen)</option>
-            <option value={RATING_FILTERS.M}>M (Mature)</option>
-          </select>
-        </div>
+        <CustomDropdown
+          label="Rating"
+          icon={<FaStar className="w-4 h-4" />}
+          value={selectedRating}
+          onChange={onChangeSelectedRating}
+          options={[
+            { value: RATING_FILTERS.ALL, label: "All Ratings" },
+            { value: RATING_FILTERS.E, label: "E (Everyone)" },
+            { value: RATING_FILTERS.E10, label: "E10+ (Everyone 10+)" },
+            { value: RATING_FILTERS.T, label: "T (Teen)" },
+            { value: RATING_FILTERS.M, label: "M (Mature)" },
+          ]}
+          colorScheme="pink"
+        />
 
         {/* Genre Filters */}
         <div>
