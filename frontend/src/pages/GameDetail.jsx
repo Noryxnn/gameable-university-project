@@ -146,6 +146,29 @@ const GameDetail = ({ user }) => {
     }
   };
 
+  const handleDeleteGame = async () => {
+    if (!window.confirm(`⚠️ WARNING: Are you sure you want to PERMANENTLY DELETE "${game.title}"? This action cannot be undone and will remove the game from the website.`)) {
+      return;
+    }
+
+    if (!window.confirm(`This is your final warning. Delete "${game.title}"?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`/api/games/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      alert("Game deleted successfully");
+      navigate("/home");
+    } catch (err) {
+      console.error("Error deleting game:", err);
+      alert(err.response?.data?.message || "Failed to delete game");
+    }
+  };
+
   const getAccessibilityIcon = (feature) => {
     const lower = feature.toLowerCase();
     if (lower.includes("hearing")) return <FaHeadphones className="w-3 h-3" />;
@@ -250,9 +273,21 @@ const GameDetail = ({ user }) => {
             <div className="p-6 border-2 border-cyan-500/30 rounded-2xl shadow-lg bg-gradient-to-br from-[#16161f] to-[#1f1f2e] shadow-cyan-500/20">
               <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6">
                 <div className="flex-1">
-                  <h1 className="text-cyan-400 text-2xl sm:text-3xl lg:text-4xl font-black mb-3">
-                    {game.title}
-                  </h1>
+                  <div className="flex items-center gap-3 mb-3">
+                    <h1 className="text-cyan-400 text-2xl sm:text-3xl lg:text-4xl font-black">
+                      {game.title}
+                    </h1>
+                    {user?.isAdmin && (
+                      <button
+                        onClick={handleDeleteGame}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-colors font-medium"
+                        title="Delete Game (Admin)"
+                      >
+                        <FaTrash className="w-4 h-4" />
+                        <span className="hidden sm:inline">Delete Game</span>
+                      </button>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-4 mb-4">
                     <div className="flex items-center gap-2">

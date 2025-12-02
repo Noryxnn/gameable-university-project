@@ -40,7 +40,29 @@ function App() {
     commitSearch,
     suggestions,
     clearSearch,
+    refreshGames,
   } = useGameSearch();
+  
+  // Axios interceptor to handle banned users globally
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        // Check if user was banned
+        if (error.response?.status === 403 && error.response?.data?.banned) {
+          localStorage.removeItem("token");
+          setUser(null);
+          alert("Your account has been banned. Please contact support.");
+          window.location.href = "/login";
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
   
   useEffect(() => {
     const fetchUser = async () => {
@@ -51,8 +73,27 @@ function App() {
             const res = await axios.get("/api/users/me", {
               headers: { Authorization: `Bearer ${token}` },
             });
+            
+            // Check if user is banned
+            if (res.data.isBanned) {
+              localStorage.removeItem("token");
+              setUser(null);
+              alert("Your account has been banned. Please contact support.");
+              window.location.href = "/login";
+              return;
+            }
+            
             setUser(res.data);
           } catch (err) {
+            // Check if user was banned
+            if (err.response?.data?.banned || err.response?.status === 403) {
+              localStorage.removeItem("token");
+              setUser(null);
+              alert("Your account has been banned. Please contact support.");
+              window.location.href = "/login";
+              return;
+            }
+            
             // Silently fail if backend is not available or token is invalid
             console.error("Error fetching user:", err);
             localStorage.removeItem("token");
