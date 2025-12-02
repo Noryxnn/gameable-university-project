@@ -65,6 +65,124 @@ function App() {
     };
   }, []);
   
+  // Load and apply color blind mode preference on app load and listen for changes
+  useEffect(() => {
+    const applyColorBlindFilter = () => {
+      const savedColorBlindMode = localStorage.getItem("colorBlindMode") || "none";
+      const colorBlindFilters = {
+        none: "none",
+        protanopia: "url(#protanopia)",
+        deuteranopia: "url(#deuteranopia)",
+        tritanopia: "url(#tritanopia)",
+      };
+      
+      document.body.style.filter = colorBlindFilters[savedColorBlindMode] || "none";
+    };
+
+    // Apply on initial load
+    applyColorBlindFilter();
+
+    // Listen for storage changes (when Settings page updates it)
+    const handleStorageChange = (e) => {
+      if (e.key === "colorBlindMode") {
+        applyColorBlindFilter();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Also listen for custom event from Settings page (for same-tab updates)
+    const handleCustomStorageChange = () => {
+      applyColorBlindFilter();
+    };
+    
+    window.addEventListener("colorBlindModeChanged", handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("colorBlindModeChanged", handleCustomStorageChange);
+    };
+  }, []);
+
+  // Text-to-Speech functionality
+  useEffect(() => {
+    const isTextToSpeechEnabled = () => {
+      return localStorage.getItem("textToSpeechEnabled") === "true";
+    };
+
+    const speakText = (text) => {
+      if (!window.speechSynthesis || !text) return;
+      
+      // Stop any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      // Create a new speech utterance
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      
+      // Speak the text
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const handleTextClick = (e) => {
+      // Don't trigger on buttons, inputs, links, or interactive elements
+      if (
+        e.target.tagName === "BUTTON" ||
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "A" ||
+        e.target.tagName === "SELECT" ||
+        e.target.closest("button") ||
+        e.target.closest("a") ||
+        e.target.closest("input") ||
+        e.target.closest("select")
+      ) {
+        return;
+      }
+
+      if (!isTextToSpeechEnabled()) return;
+
+      // Get the text content
+      const text = e.target.textContent?.trim() || e.target.innerText?.trim();
+      
+      if (text && text.length > 0) {
+        // Limit the text length to avoid reading too much
+        const maxLength = 500;
+        const textToSpeak = text.length > maxLength 
+          ? text.substring(0, maxLength) + "..."
+          : text;
+        
+        speakText(textToSpeak);
+      }
+    };
+
+    // Apply text-to-speech on initial load
+    if (isTextToSpeechEnabled()) {
+      document.addEventListener("click", handleTextClick);
+    }
+
+    // Listen for text-to-speech changes
+    const handleTextToSpeechChange = (e) => {
+      const enabled = e.detail?.enabled ?? isTextToSpeechEnabled();
+      
+      if (enabled) {
+        document.addEventListener("click", handleTextClick);
+      } else {
+        document.removeEventListener("click", handleTextClick);
+        window.speechSynthesis?.cancel();
+      }
+    };
+
+    window.addEventListener("textToSpeechChanged", handleTextToSpeechChange);
+
+    return () => {
+      document.removeEventListener("click", handleTextClick);
+      window.removeEventListener("textToSpeechChanged", handleTextToSpeechChange);
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
