@@ -18,6 +18,9 @@ const Navbar = ({ user, setUser }) => {
   };
 
   const isActive = (path) => {
+    if (path === "/admin") {
+      return location.pathname.startsWith("/admin");
+    }
     if (path === "/admin/requests") {
       return location.pathname === "/admin/requests" || location.pathname.startsWith("/admin/approve-game");
     }
@@ -113,9 +116,9 @@ const Navbar = ({ user, setUser }) => {
                 </button>
                 {user?.isAdmin && (
                   <button
-                    onClick={() => navigate("/admin/requests")}
+                    onClick={() => navigate("/admin")}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                      isActive("/admin/requests") || isActive("/admin/approve-game")
+                      isActive("/admin") || isActive("/admin/requests") || isActive("/admin/approve-game")
                         ? "bg-orange-600/30 text-orange-300"
                         : "text-white hover:bg-orange-600/20"
                     }`}
@@ -287,9 +290,9 @@ const Navbar = ({ user, setUser }) => {
                     </button>
                     {user?.isAdmin && (
                       <button
-                        onClick={() => handleNavigation("/admin/requests")}
+                        onClick={() => handleNavigation("/admin")}
                         className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
-                          isActive("/admin/requests") || isActive("/admin/approve-game")
+                          isActive("/admin") || isActive("/admin/requests") || isActive("/admin/approve-game")
                             ? "bg-orange-600/30 text-orange-300"
                             : "text-white hover:bg-orange-600/20"
                         }`}

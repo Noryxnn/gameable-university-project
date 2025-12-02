@@ -1,7 +1,7 @@
 import express from 'express';
 import Review from '../models/Review.js';
 import Game from '../models/Game.js';
-import { protect } from '../middleware/auth.js';
+import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -95,7 +95,7 @@ router.put('/:id', protect, async (req, res) => {
     }
 });
 
-// Delete a review
+// Delete a review (users can delete their own, admins can delete any)
 router.delete('/:id', protect, async (req, res) => {
     try {
         const review = await Review.findById(req.params.id);
@@ -104,7 +104,11 @@ router.delete('/:id', protect, async (req, res) => {
             return res.status(404).json({ message: 'Review not found' });
         }
         
-        if (review.userId.toString() !== req.user._id.toString()) {
+        // Allow deletion if user owns the review OR user is admin
+        const isOwner = review.userId.toString() === req.user._id.toString();
+        const isAdminUser = req.user.isAdmin;
+        
+        if (!isOwner && !isAdminUser) {
             return res.status(403).json({ message: 'Not authorized to delete this review' });
         }
         

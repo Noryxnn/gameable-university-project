@@ -1,7 +1,7 @@
 import express from "express";
 import User from "../models/User.js";
 import Game from "../models/Game.js";
-import { protect } from "../middleware/auth.js";
+import { protect, admin } from "../middleware/auth.js";
 import jwt from "jsonwebtoken";
 import upload from "../middleware/upload.js";
 import path from "path";
@@ -71,6 +71,12 @@ router.post("/login", async (req, res) => {
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
+
+    // Check if user is banned
+    if (user.isBanned) {
+      return res.status(403).json({ message: "Your account has been banned. Please contact support." });
+    }
+
     const token = generateToken(user._id);
     res.status(200).json({
       id: user._id,
@@ -227,10 +233,36 @@ router.post("/profile/upload", protect, upload.single("profilePicture"), async (
   }
 });
 
+// Get all users (admin only)
+router.get("/all", protect, admin, async (req, res) => {
+  try {
+    const users = await User.find({})
+      .select("-password")
+      .select("username email bio profilePicture favoriteGames isAdmin isBanned createdAt")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ users });
+  } catch (err) {
+    console.error("Get all users error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // Search users
 router.get("/search", protect, async (req, res) => {
   try {
     const { q } = req.query;
+    
+    // If admin and empty query, return all users
+    if (req.user.isAdmin && (!q || q.trim() === "")) {
+      const users = await User.find({})
+        .select("-password")
+        .select("username email bio profilePicture favoriteGames isAdmin isBanned createdAt")
+        .sort({ createdAt: -1 })
+        .limit(100);
+      return res.status(200).json({ users });
+    }
+
     if (!q || q.length < 2) {
       return res.status(400).json({ message: "Search query must be at least 2 characters" });
     }
@@ -242,8 +274,8 @@ router.get("/search", protect, async (req, res) => {
       ],
       _id: { $ne: req.user._id }
     })
-    .select("username email bio profilePicture favoriteGames")
-    .limit(20);
+    .select("username email bio profilePicture favoriteGames isAdmin isBanned createdAt")
+    .limit(100);
 
     res.status(200).json({ users });
   } catch (err) {
@@ -674,6 +706,101 @@ router.post("/reset-password/:token", async (req, res) => {
     res.status(200).json({ message: "Password reset successful" });
   } catch (err) {
     console.error("Reset password error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Admin routes - User management (must come before GET /:userId)
+// PUT /api/users/:userId/ban - Ban a user (admin only)
+router.put("/:userId/ban", protect, admin, async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.userId);
+    
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Prevent banning admins
+    if (targetUser.isAdmin) {
+      return res.status(400).json({ message: "Cannot ban admin users" });
+    }
+
+    // Prevent banning yourself
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: "Cannot ban yourself" });
+    }
+
+    targetUser.isBanned = true;
+    await targetUser.save();
+
+    res.status(200).json({ 
+      message: "User banned successfully",
+      user: {
+        _id: targetUser._id,
+        username: targetUser.username,
+        email: targetUser.email,
+        isBanned: targetUser.isBanned
+      }
+    });
+  } catch (err) {
+    console.error("Ban user error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// PUT /api/users/:userId/unban - Unban a user (admin only)
+router.put("/:userId/unban", protect, admin, async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.userId);
+    
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    targetUser.isBanned = false;
+    await targetUser.save();
+
+    res.status(200).json({ 
+      message: "User unbanned successfully",
+      user: {
+        _id: targetUser._id,
+        username: targetUser.username,
+        email: targetUser.email,
+        isBanned: targetUser.isBanned
+      }
+    });
+  } catch (err) {
+    console.error("Unban user error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// DELETE /api/users/:userId - Delete a user (admin only)
+router.delete("/:userId", protect, admin, async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.userId);
+    
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Prevent deleting admins
+    if (targetUser.isAdmin) {
+      return res.status(400).json({ message: "Cannot delete admin users" });
+    }
+
+    // Prevent deleting yourself
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: "Cannot delete yourself" });
+    }
+
+    await User.findByIdAndDelete(req.params.userId);
+
+    res.status(200).json({ 
+      message: "User deleted successfully"
+    });
+  } catch (err) {
+    console.error("Delete user error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });

@@ -18,6 +18,7 @@ import GameDetail from "./pages/GameDetail";
 import Favorites from "./pages/Favorites";
 import AdminRequests from "./pages/AdminRequests";
 import AdminGameApproval from "./pages/AdminGameApproval";
+import AdminDashboard from "./pages/AdminDashboard";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import NotFound from "./components/NotFound";
@@ -101,6 +102,10 @@ function App() {
         <Route
           path="/favorites"
           element={user ? <Favorites user={user} /> : <Navigate to="/login" />}
+        />
+        <Route
+          path="/admin"
+          element={user?.isAdmin ? <AdminDashboard user={user} /> : <Navigate to="/home" />}
         />
         <Route
           path="/admin/requests"

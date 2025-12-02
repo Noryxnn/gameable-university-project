@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaCheck, FaTimes, FaEye, FaClock, FaCheckCircle, FaTimesCircle, FaPlusCircle, FaTrash } from "react-icons/fa";
+import { FaCheck, FaTimes, FaEye, FaClock, FaCheckCircle, FaTimesCircle, FaPlusCircle, FaTrash, FaArrowLeft } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const AdminRequests = ({ user }) => {
@@ -173,6 +173,14 @@ const AdminRequests = ({ user }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900">
       <div className="container mx-auto px-4 py-8">
+        <button
+          onClick={() => navigate("/admin")}
+          className="mb-6 flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors"
+        >
+          <FaArrowLeft className="w-4 h-4" />
+          <span>Back to Admin Dashboard</span>
+        </button>
+        
         <div className="mb-8">
           <h1 className="text-4xl font-black mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
             🎮 Game Requests Management
