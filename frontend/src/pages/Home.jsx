@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { FaFilter, FaHeart, FaRegHeart } from "react-icons/fa";
@@ -31,13 +31,7 @@ const Home = ({
   const [selectedRating, setSelectedRating] = useState(RATING_FILTERS.ALL);
   const [selectedSort, setSelectedSort] = useState(SORT_OPTIONS.DEFAULT);
 
-  useEffect(() => {
-    if (user) {
-      fetchFavorites();
-    }
-  }, [user]);
-
-  const fetchFavorites = async () => {
+  const fetchFavorites = useCallback(async () => {
     if (!user) return;
     try {
       const token = localStorage.getItem("token");
@@ -49,7 +43,16 @@ const Home = ({
     } catch (err) {
       console.error("Error fetching favorites:", err);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        fetchFavorites();
+      }, 0);
+    }
+  }, [user, fetchFavorites]);
 
   const toggleFavorite = async (gameId, e) => {
     e.stopPropagation();

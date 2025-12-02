@@ -40,7 +40,10 @@ const Navbar = ({
 
   // Reset selected index when suggestions change
   useEffect(() => {
-    setSelectedIndex(-1);
+    if (suggestions.length === 0) {
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => setSelectedIndex(-1), 0);
+    }
   }, [suggestions]);
 
   const handleLogout = () => {

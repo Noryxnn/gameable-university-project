@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { FaUpload, FaEdit, FaGamepad } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
@@ -25,7 +25,7 @@ const Profile = ({ user, setUser }) => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
       const res = await axios.get("/api/users/me", {
@@ -53,11 +53,14 @@ const Profile = ({ user, setUser }) => {
       setError("Failed to load profile");
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => {
+      fetchProfile();
+    }, 0);
+  }, [fetchProfile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

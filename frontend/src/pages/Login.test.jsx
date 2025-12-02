@@ -190,24 +190,30 @@ describe("Login Component", () => {
   });
 
   describe("Error Handling from URL Parameters", () => {
-    it("displays error message when google_oauth_not_configured error is in URL", () => {
+    it("displays error message when google_oauth_not_configured error is in URL", async () => {
       renderLogin(["/login?error=google_oauth_not_configured"]);
 
-      expect(
-        screen.getByText(/google oauth is not configured. please use email\/password to login/i)
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByText(/google oauth is not configured. please use email\/password to login/i)
+        ).toBeInTheDocument();
+      });
     });
 
-    it("displays error message when google_auth_failed error is in URL", () => {
+    it("displays error message when google_auth_failed error is in URL", async () => {
       renderLogin(["/login?error=google_auth_failed"]);
 
-      expect(screen.getByText(/google authentication failed. please try again/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/google authentication failed. please try again/i)).toBeInTheDocument();
+      });
     });
 
-    it("displays error message when account_banned error is in URL", () => {
+    it("displays error message when account_banned error is in URL", async () => {
       renderLogin(["/login?error=account_banned"]);
 
-      expect(screen.getByText(/your account has been banned. please contact support/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/your account has been banned. please contact support/i)).toBeInTheDocument();
+      });
     });
 
     it("does not display error when no error parameter is in URL", () => {

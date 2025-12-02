@@ -29,6 +29,7 @@ const Register = ({ setUser }) => {
 
     try {
       // Only send username, email, and password to backend
+      // eslint-disable-next-line no-unused-vars
       const { confirmPassword, ...registerData } = formData;
       const res = await axios.post("/api/users/register", registerData);
       localStorage.setItem("token", res.data.token);
