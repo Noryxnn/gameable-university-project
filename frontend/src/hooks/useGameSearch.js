@@ -22,21 +22,23 @@ const useGameSearch = () => {
   const [suggestions, setSuggestions] = useState([]);
   const debounceTimerRef = useRef(null);
 
+  // Fetch all games
+  const fetchGames = async () => {
+    try {
+      setLoading(true);
+      setError(false);
+      const res = await axios.get("/api/games");
+      setGames(res.data || []);
+    } catch (err) {
+      console.error("Error fetching games:", err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch all games on mount
   useEffect(() => {
-    const fetchGames = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-        const res = await axios.get("/api/games");
-        setGames(res.data || []);
-      } catch (err) {
-        console.error("Error fetching games:", err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchGames();
   }, []);
 
@@ -119,6 +121,7 @@ const useGameSearch = () => {
     commitSearch, // Function to commit the search
     suggestions,
     clearSearch,
+    refreshGames: fetchGames, // Function to refresh games list
   };
 };
 

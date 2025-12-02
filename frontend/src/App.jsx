@@ -40,6 +40,7 @@ function App() {
     commitSearch,
     suggestions,
     clearSearch,
+    refreshGames,
   } = useGameSearch();
   
   useEffect(() => {
