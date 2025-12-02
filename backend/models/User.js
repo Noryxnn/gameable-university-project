@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     isAdmin: { type: Boolean, default: false },
+    isBanned: { type: Boolean, default: false },
     bio: { type: String, default: "" },
     profilePicture: { type: String, default: "" },
     gamingPlatforms: {

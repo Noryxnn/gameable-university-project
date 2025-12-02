@@ -18,7 +18,8 @@ import {
   FaMicrophone,
   FaGamepad,
   FaClosedCaptioning,
-  FaHandPaper
+  FaHandPaper,
+  FaTrash
 } from "react-icons/fa";
 
 const GameDetail = ({ user }) => {
@@ -120,6 +121,28 @@ const GameDetail = ({ user }) => {
       alert(err.response?.data?.message || "Failed to submit review");
     } finally {
       setSubmittingReview(false);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId, isOwner) => {
+    const confirmMessage = isOwner 
+      ? "Are you sure you want to delete your review?"
+      : "Are you sure you want to delete this review? (Admin action)";
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`/api/reviews/${reviewId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchReviews();
+      fetchGame(); // Refresh game to get updated review count
+    } catch (err) {
+      console.error("Error deleting review:", err);
+      alert(err.response?.data?.message || "Failed to delete review");
     }
   };
 
@@ -387,59 +410,76 @@ const GameDetail = ({ user }) => {
                 <p className="text-gray-500 text-center py-4">No reviews yet. Be the first to review!</p>
               ) : (
                 <div className="space-y-4">
-                  {reviews.map((review) => (
+                  {reviews.map((review) => {
+                    const isReviewOwner = user && review.userId === user._id;
+                    const isAdminUser = user && user.isAdmin;
+                    const canDelete = isReviewOwner || isAdminUser;
+
+                    return (
                       <div
                         key={review._id}
                         className="p-4 bg-[#1f1f2e] rounded-xl border-2 border-orange-500/20"
                       >
-                        <div className="flex items-center gap-3 mb-2">
-                          <div 
-                            onClick={() => navigate(`/user/${review.userId}`)}
-                            className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all"
-                          >
-                            {review.profilePicture ? (
-                              <img
-                                src={review.profilePicture}
-                                alt={review.username}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-white font-bold">
-                                {review.username?.charAt(0).toUpperCase()}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex-1">
-                            <p 
+                        <div className="flex items-start justify-between gap-3 mb-2">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div 
                               onClick={() => navigate(`/user/${review.userId}`)}
-                              className="text-white font-semibold cursor-pointer hover:text-cyan-400 transition-colors"
+                              className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all flex-shrink-0"
                             >
-                              {review.username}
-                            </p>
-                            <p className="text-gray-500 text-xs">
-                              {new Date(review.createdAt).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })}
-                            </p>
+                              {review.profilePicture ? (
+                                <img
+                                  src={review.profilePicture}
+                                  alt={review.username}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-white font-bold">
+                                  {review.username?.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <p 
+                                onClick={() => navigate(`/user/${review.userId}`)}
+                                className="text-white font-semibold cursor-pointer hover:text-cyan-400 transition-colors"
+                              >
+                                {review.username}
+                              </p>
+                              <p className="text-gray-500 text-xs">
+                                {new Date(review.createdAt).toLocaleDateString("en-US", {
+                                  year: "numeric",
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </p>
+                            </div>
+                            <div className="flex gap-0.5">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <FaStar
+                                  key={star}
+                                  className={`w-4 h-4 ${
+                                    star <= review.rating
+                                      ? "text-yellow-400"
+                                      : "text-gray-600"
+                                  }`}
+                                />
+                              ))}
+                            </div>
                           </div>
-                        <div className="flex gap-0.5">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <FaStar
-                              key={star}
-                              className={`w-4 h-4 ${
-                                star <= review.rating
-                                  ? "text-yellow-400"
-                                  : "text-gray-600"
-                              }`}
-                            />
-                          ))}
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDeleteReview(review._id, isReviewOwner)}
+                              className="flex items-center gap-1 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/50 rounded-lg transition-colors text-sm"
+                              title={isAdminUser && !isReviewOwner ? "Delete as admin" : "Delete your review"}
+                            >
+                              <FaTrash className="w-3 h-3" />
+                            </button>
+                          )}
                         </div>
+                        <p className="text-gray-300">{review.content}</p>
                       </div>
-                      <p className="text-gray-300">{review.content}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaUser, FaArrowLeft, FaGamepad, FaXbox, FaPlaystation, FaFacebook, FaInstagram, FaUserPlus, FaUserCheck, FaUserClock, FaUserMinus } from 'react-icons/fa';
+import { FaUser, FaArrowLeft, FaGamepad, FaXbox, FaPlaystation, FaFacebook, FaInstagram, FaUserPlus, FaUserCheck, FaUserClock, FaUserMinus, FaBan, FaTrash, FaCheckCircle } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
 const UserProfile = ({ user: currentUser }) => {
@@ -145,6 +145,53 @@ const UserProfile = ({ user: currentUser }) => {
   }
 
   const isOwnProfile = currentUser && currentUser._id === userProfile._id;
+  const isAdmin = currentUser && currentUser.isAdmin;
+
+  const handleBanUser = async () => {
+    if (!window.confirm(`Are you sure you want to ${userProfile.isBanned ? 'unban' : 'ban'} ${userProfile.username}?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const endpoint = userProfile.isBanned 
+        ? `/api/users/${userId}/unban`
+        : `/api/users/${userId}/ban`;
+      
+      await axios.put(endpoint, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      fetchUserProfile();
+      alert(`User ${userProfile.isBanned ? 'unbanned' : 'banned'} successfully`);
+    } catch (err) {
+      console.error('Error banning user:', err);
+      alert(err.response?.data?.message || 'Failed to ban/unban user');
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!window.confirm(`⚠️ WARNING: Are you sure you want to PERMANENTLY DELETE ${userProfile.username}? This action cannot be undone and will delete all their data, reviews, and favorites.`)) {
+      return;
+    }
+
+    if (!window.confirm(`This is your final warning. Delete ${userProfile.username}?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`/api/users/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      alert('User deleted successfully');
+      navigate('/social');
+    } catch (err) {
+      console.error('Error deleting user:', err);
+      alert(err.response?.data?.message || 'Failed to delete user');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 py-8 sm:py-12">
@@ -187,9 +234,16 @@ const UserProfile = ({ user: currentUser }) => {
 
               {/* User Details */}
               <div className="flex-1 space-y-4">
-                <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  {userProfile.username}
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    {userProfile.username}
+                  </h1>
+                  {userProfile.isBanned && (
+                    <span className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/50 rounded-full text-xs font-medium">
+                      BANNED
+                    </span>
+                  )}
+                </div>
                 <div className="text-gray-400">{userProfile.email}</div>
                 {isOwnProfile ? (
                   <button
@@ -199,7 +253,38 @@ const UserProfile = ({ user: currentUser }) => {
                     <FaUser className="w-4 h-4" />
                     Edit Profile
                   </button>
-                ) : currentUser && (
+                ) : isAdmin && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleBanUser}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                        userProfile.isBanned
+                          ? "bg-green-600 hover:bg-green-500 text-white"
+                          : "bg-orange-600 hover:bg-orange-500 text-white"
+                      }`}
+                    >
+                      {userProfile.isBanned ? (
+                        <>
+                          <FaCheckCircle className="w-4 h-4" />
+                          Unban User
+                        </>
+                      ) : (
+                        <>
+                          <FaBan className="w-4 h-4" />
+                          Ban User
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleDeleteUser}
+                      className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                    >
+                      <FaTrash className="w-4 h-4" />
+                      Delete User
+                    </button>
+                  </div>
+                )}
+                {!isOwnProfile && !isAdmin && currentUser && (
                   <div className="flex gap-3">
                     {friendStatus === 'none' && (
                       <button
