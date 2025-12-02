@@ -126,8 +126,6 @@ test_backend:
     when: always
     paths:
       - ${BACKEND_DIR}/coverage/
-    reports:
-      junit: ${BACKEND_DIR}/coverage/junit.xml
     expire_in: 1 week
   coverage: '/Lines\s*:\s*(\d+\.\d+)%/'
   rules:
