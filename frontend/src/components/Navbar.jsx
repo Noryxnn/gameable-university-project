@@ -1,14 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { FaGamepad, FaHome, FaHeart, FaUser, FaSignOutAlt, FaUsers, FaBars, FaTimes, FaPlusCircle, FaShieldAlt } from "react-icons/fa";
-import { HiMagnifyingGlass } from "react-icons/hi2";
+import { HiMagnifyingGlass, HiXMark } from "react-icons/hi2";
 
-const Navbar = ({ user, setUser }) => {
+const SEARCH_INPUT_MAX_LENGTH = 60;
+
+const Navbar = ({ 
+  user, 
+  setUser, 
+  searchQuery, 
+  setSearchQuery, 
+  suggestions, 
+  clearSearch,
+  commitSearch 
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const searchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      const clickedOutsideDesktop = searchRef.current && !searchRef.current.contains(e.target);
+      const clickedOutsideMobile = !mobileSearchRef.current || !mobileSearchRef.current.contains(e.target);
+      
+      if (clickedOutsideDesktop && clickedOutsideMobile) {
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Reset selected index when suggestions change
+  useEffect(() => {
+    setSelectedIndex(-1);
+  }, [suggestions]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -31,6 +64,141 @@ const Navbar = ({ user, setUser }) => {
     setIsMenuOpen(false);
   };
 
+  const handleHomeNavigation = () => {
+    clearSearch();
+    setIsMenuOpen(false);
+    navigate("/home");
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setShowSuggestions(true);
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+    // Commit the search to filter results
+    commitSearch();
+    // Navigate to home if not already there to show search results
+    if (location.pathname !== "/home") {
+      navigate("/home");
+    }
+  };
+
+  const handleSuggestionClick = (game) => {
+    setSearchQuery(game.title);
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+    // Navigate to the game detail page
+    navigate(`/game/${game._id}`);
+  };
+
+  const handleKeyDown = (e) => {
+    if (!showSuggestions || suggestions.length === 0) {
+      if (e.key === "Enter") {
+        handleSearchSubmit(e);
+      }
+      return;
+    }
+
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setSelectedIndex((prev) => 
+          prev < suggestions.length - 1 ? prev + 1 : prev
+        );
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < suggestions.length) {
+          handleSuggestionClick(suggestions[selectedIndex]);
+        } else {
+          handleSearchSubmit(e);
+        }
+        break;
+      case "Escape":
+        setShowSuggestions(false);
+        setSelectedIndex(-1);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const handleClearSearch = () => {
+    clearSearch();
+    setShowSuggestions(false);
+    setSelectedIndex(-1);
+  };
+
+  // Suggestions dropdown JSX (reusable)
+  const renderSuggestions = () => (
+    <>
+      {/* Autocomplete Suggestions Dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-xl border-2 border-purple-500/40 rounded-xl shadow-2xl shadow-purple-500/20 overflow-hidden z-50">
+          <ul className="py-2">
+            {suggestions.map((game, index) => (
+              <li key={game._id}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSuggestionClick(game);
+                  }}
+                  className={`w-full px-4 py-3 flex items-center gap-3 text-left transition-colors ${
+                    index === selectedIndex
+                      ? "bg-purple-600/30 text-white"
+                      : "text-white/80 hover:bg-purple-600/20"
+                  }`}
+                >
+                  {game.imageUrl && (
+                    <img
+                      src={game.imageUrl}
+                      alt={game.title}
+                      className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{game.title}</p>
+                    <p className="text-sm text-purple-400 truncate">{game.developer}</p>
+                  </div>
+                  {game.genre && (
+                    <span className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full flex-shrink-0">
+                      {game.genre}
+                    </span>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+          <div className="px-4 py-2 border-t border-purple-500/20 text-xs text-gray-400">
+            Press <kbd className="bg-purple-500/20 px-1.5 py-0.5 rounded text-purple-300">Enter</kbd> to search all • <kbd className="bg-purple-500/20 px-1.5 py-0.5 rounded text-purple-300">↑↓</kbd> to navigate
+          </div>
+        </div>
+      )}
+
+      {/* No results message */}
+      {showSuggestions && searchQuery && suggestions.length === 0 && (
+        <div className="absolute top-full left-0 right-0 mt-2 bg-gray-900/95 backdrop-blur-xl border-2 border-purple-500/40 rounded-xl shadow-2xl shadow-purple-500/20 overflow-hidden z-50">
+          <div className="px-4 py-6 text-center">
+            <p className="text-white/60">No games found for "{searchQuery}"</p>
+            <p className="text-sm text-purple-400 mt-1">Try a different search term</p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <header className="bg-black/90 backdrop-blur-xl shadow-2xl sticky top-0 z-50 border-b border-purple-500/20">
       <div className="container mx-auto px-4 sm:px-6">
@@ -38,7 +206,7 @@ const Navbar = ({ user, setUser }) => {
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo - Left Side */}
           <button
-            onClick={() => navigate("/home")}
+            onClick={handleHomeNavigation}
             className="text-2xl font-bold text-white hover:scale-105 transition-transform flex items-center gap-2 sm:gap-3 group flex-shrink-0"
             aria-label="Go to home page"
           >
@@ -57,7 +225,7 @@ const Navbar = ({ user, setUser }) => {
             {user ? (
               <>
                 <button
-                  onClick={() => navigate("/home")}
+                  onClick={handleHomeNavigation}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
                     isActive("/home")
                       ? "bg-purple-600/30 text-purple-300"
@@ -138,16 +306,38 @@ const Navbar = ({ user, setUser }) => {
           {/* Desktop Search - Right Side */}
           <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
             {currentPage !== "login" && currentPage !== "register" && (
-              <div className="relative w-64">
-                <HiMagnifyingGlass className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400 w-5 h-5" />
-                <input
-                  type="search"
-                  placeholder="Search games..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-12 h-12 bg-black/60 backdrop-blur-md border-2 border-purple-500/40 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder:text-gray-400 rounded-xl w-full"
-                  aria-label="Search for games"
-                />
+              <div className="relative w-72" ref={searchRef}>
+                <form onSubmit={handleSearchSubmit}>
+                  <div className="relative">
+                    <HiMagnifyingGlass className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400 w-5 h-5 pointer-events-none" />
+                    <input
+                      type="text"
+                      placeholder="Search games or developers..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      onFocus={() => searchQuery && setShowSuggestions(true)}
+                      onKeyDown={handleKeyDown}
+                      maxLength={SEARCH_INPUT_MAX_LENGTH}
+                      className="pl-12 pr-10 h-12 bg-black/60 backdrop-blur-md border-2 border-purple-500/40 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder:text-gray-400 rounded-xl w-full outline-none transition-all"
+                      aria-label="Search for games"
+                      autoComplete="off"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleClearSearch();
+                        }}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                        aria-label="Clear search"
+                      >
+                        <HiXMark className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </form>
+                {renderSuggestions()}
               </div>
             )}
             {!user && (
@@ -188,17 +378,39 @@ const Navbar = ({ user, setUser }) => {
         {/* Mobile Search Bar (Expandable) */}
         {isSearchOpen && currentPage !== "login" && currentPage !== "register" && (
           <div className="lg:hidden pb-4 animate-in slide-in-from-top-2 duration-200">
-            <div className="relative">
-              <HiMagnifyingGlass className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400 w-5 h-5" />
-              <input
-                type="search"
-                placeholder="Search games..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 h-12 bg-black/60 backdrop-blur-md border-2 border-purple-500/40 focus:border-pink-500 text-white placeholder:text-gray-400 rounded-xl w-full"
-                aria-label="Search for games"
-                autoFocus
-              />
+            <div className="relative w-full" ref={mobileSearchRef}>
+              <form onSubmit={handleSearchSubmit}>
+                <div className="relative">
+                  <HiMagnifyingGlass className="absolute left-4 top-1/2 transform -translate-y-1/2 text-pink-400 w-5 h-5 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search games or developers..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    onFocus={() => searchQuery && setShowSuggestions(true)}
+                    onKeyDown={handleKeyDown}
+                    maxLength={SEARCH_INPUT_MAX_LENGTH}
+                    className="pl-12 pr-10 h-12 bg-black/60 backdrop-blur-md border-2 border-purple-500/40 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/50 text-white placeholder:text-gray-400 rounded-xl w-full outline-none transition-all"
+                    aria-label="Search for games"
+                    autoComplete="off"
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleClearSearch();
+                      }}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                      aria-label="Clear search"
+                    >
+                      <HiXMark className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              </form>
+              {renderSuggestions()}
             </div>
           </div>
         )}
@@ -231,7 +443,7 @@ const Navbar = ({ user, setUser }) => {
                 {user ? (
                   <>
                     <button
-                      onClick={() => handleNavigation("/home")}
+                      onClick={handleHomeNavigation}
                       className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
                         isActive("/home")
                           ? "bg-purple-600/30 text-purple-300"
