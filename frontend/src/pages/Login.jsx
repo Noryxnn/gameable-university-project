@@ -25,7 +25,8 @@ const Login = ({ setUser }) => {
         errorMessage = "Your account has been banned. Please contact support.";
       }
       if (errorMessage) {
-        setError(errorMessage);
+        // Use setTimeout to avoid synchronous setState in effect
+        setTimeout(() => setError(errorMessage), 0);
       }
     }
   }, [searchParams]);

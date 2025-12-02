@@ -32,7 +32,10 @@ const Home = ({ user, games, filteredGames: searchFilteredGames, gamesLoading, g
 
   useEffect(() => {
     if (user) {
-      fetchFavorites();
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        fetchFavorites();
+      }, 0);
     }
   }, [user, fetchFavorites]);
 

@@ -56,7 +56,10 @@ const Profile = ({ user, setUser }) => {
   }, []);
 
   useEffect(() => {
-    fetchProfile();
+    // Use setTimeout to avoid synchronous setState in effect
+    setTimeout(() => {
+      fetchProfile();
+    }, 0);
   }, [fetchProfile]);
 
   const handleChange = (e) => {

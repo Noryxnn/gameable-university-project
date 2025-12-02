@@ -59,7 +59,7 @@ const UserProfile = ({ user: currentUser }) => {
     } catch (err) {
       console.error('Error checking friend status:', err);
     }
-  }, [userId, currentUser]);
+  }, [userId]);
 
   const sendFriendRequest = async () => {
     try {
