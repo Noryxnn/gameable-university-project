@@ -6,7 +6,11 @@ import crypto from 'crypto';
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    // Password is optional to support OAuth-based accounts (e.g. Google)
+    password: { type: String, required: false },
+    // OAuth-related fields
+    googleId: { type: String, unique: true, sparse: true },
+    authProvider: { type: String, enum: ["local", "google"], default: "local" },
     isAdmin: { type: Boolean, default: false },
     isBanned: { type: Boolean, default: false },
     bio: { type: String, default: "" },
