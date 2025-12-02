@@ -1,4 +1,6 @@
 import express from "express";
+import passport from "passport";
+import { googleOAuthEnabled } from "../config/passport.js";
 import User from "../models/User.js";
 import Game from "../models/Game.js";
 import { protect, admin } from "../middleware/auth.js";
@@ -42,10 +44,16 @@ router.post("/register", async (req, res) => {
 
     const userExists = await User.findOne({ email });
     if (userExists) {
+      // Check if account was created with Google OAuth
+      if (userExists.authProvider === "google") {
+        return res.status(400).json({ 
+          message: "An account with this email already exists. Please sign in with Google." 
+        });
+      }
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = await User.create({ username, email, password });
+    const user = await User.create({ username, email, password, authProvider: "local" });
     const token = generateToken(user._id);
     res.status(201).json({
       id: user._id,
@@ -68,7 +76,18 @@ router.post("/login", async (req, res) => {
     }
     const user = await User.findOne({ email });
 
-    if (!user || !(await user.matchPassword(password))) {
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // Check if user signed up with Google OAuth
+    if (user.authProvider === "google" || !user.password) {
+      return res.status(401).json({ 
+        message: "This account was created with Google. Please sign in with Google." 
+      });
+    }
+
+    if (!(await user.matchPassword(password))) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -90,6 +109,45 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+// Middleware to check if Google OAuth is configured and enabled
+const checkGoogleOAuth = (req, res, next) => {
+  if (!googleOAuthEnabled) {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    return res.redirect(`${frontendUrl}/login?error=google_oauth_not_configured`);
+  }
+  next();
+};
+
+// Google OAuth - Initiate authentication
+router.get("/auth/google", checkGoogleOAuth, passport.authenticate("google", { scope: ["profile", "email"] }));
+
+// Google OAuth - Callback handler
+router.get(
+  "/auth/google/callback",
+  checkGoogleOAuth,
+  passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=google_auth_failed` }),
+  async (req, res) => {
+    try {
+      const user = req.user;
+
+      // Check if user is banned
+      if (user.isBanned) {
+        return res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=account_banned`);
+      }
+
+      // Generate JWT token
+      const token = generateToken(user._id);
+
+      // Redirect to frontend with token
+      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+      res.redirect(`${frontendUrl}/auth/google/callback?token=${token}`);
+    } catch (err) {
+      console.error("Google OAuth callback error:", err);
+      res.redirect(`${process.env.FRONTEND_URL || "http://localhost:5173"}/login?error=server_error`);
+    }
+  }
+);
 
 // Me
 router.get("/me", protect, async (req, res) => {
@@ -594,6 +652,14 @@ router.post("/forgot-password", async (req, res) => {
 
     if (!user) {
       // Don't reveal if user exists or not for security
+      return res.status(200).json({ 
+        message: "If that email exists, a password reset link has been sent" 
+      });
+    }
+
+    // Check if user signed up with Google OAuth
+    if (user.authProvider === "google" || !user.password) {
+      // Don't reveal the exact reason for security, but don't send email
       return res.status(200).json({ 
         message: "If that email exists, a password reset link has been sent" 
       });
