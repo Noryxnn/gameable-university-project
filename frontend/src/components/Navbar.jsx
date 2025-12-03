@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { FaGamepad, FaHome, FaHeart, FaUser, FaSignOutAlt, FaUsers, FaBars, FaTimes, FaPlusCircle, FaShieldAlt } from "react-icons/fa";
+import { FaGamepad, FaHome, FaHeart, FaUser, FaSignOutAlt, FaUsers, FaBars, FaTimes, FaPlusCircle, FaShieldAlt, FaCog } from "react-icons/fa";
 import { HiMagnifyingGlass, HiXMark } from "react-icons/hi2";
 
 const SEARCH_INPUT_MAX_LENGTH = 60;
@@ -228,7 +228,7 @@ const Navbar = ({
 
           {/* Desktop Navigation - Center */}
           <div className="hidden lg:flex items-center gap-2 flex-1 justify-center px-6">
-            {user ? (
+             {user ? (
               <>
                 <button
                   onClick={handleHomeNavigation}
@@ -273,6 +273,17 @@ const Navbar = ({
                 >
                   <FaUser className="w-5 h-5" />
                   <span>Profile</span>
+                </button>
+                <button
+                  onClick={() => navigate("/settings")}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
+                    isActive("/settings")
+                      ? "bg-purple-600/30 text-purple-300"
+                      : "text-white hover:bg-purple-600/20"
+                  }`}
+                >
+                  <FaCog className="w-5 h-5" />
+                  <span>Settings</span>
                 </button>
                 <button
                   onClick={() => navigate("/request-game")}
@@ -491,6 +502,17 @@ const Navbar = ({
                     >
                       <FaUser className="w-5 h-5" />
                       <span>Profile</span>
+                    </button>
+                    <button
+                      onClick={() => handleNavigation("/settings")}
+                      className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
+                        isActive("/settings")
+                          ? "bg-purple-600/30 text-purple-300"
+                          : "text-white hover:bg-purple-600/20"
+                      }`}
+                    >
+                      <FaCog className="w-5 h-5" />
+                      <span>Settings</span>
                     </button>
                     <button
                       onClick={() => handleNavigation("/request-game")}

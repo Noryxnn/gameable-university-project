@@ -21,6 +21,7 @@ import {
   FaHandPaper,
   FaTrash
 } from "react-icons/fa";
+import { useVoiceContext } from "../context/VoiceCommandContext";
 
 const GameDetail = ({ user }) => {
   const { id } = useParams();
@@ -31,6 +32,10 @@ const GameDetail = ({ user }) => {
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState({ rating: 5, content: "" });
   const [submittingReview, setSubmittingReview] = useState(false);
+  const formRef = React.useRef(null);
+
+  // Voice command integration
+  const { registerHandler, unregisterHandler } = useVoiceContext();
 
   const fetchGame = useCallback(async () => {
     try {
@@ -71,13 +76,7 @@ const GameDetail = ({ user }) => {
     }
   }, [user, id]);
 
-  useEffect(() => {
-    fetchGame();
-    fetchReviews();
-    checkFavorite();
-  }, [fetchGame, fetchReviews, checkFavorite]);
-
-  const toggleFavorite = async () => {
+  const toggleFavorite = useCallback(async () => {
     if (!user) {
       navigate("/login");
       return;
@@ -99,7 +98,45 @@ const GameDetail = ({ user }) => {
       console.error("Error toggling favorite:", err);
       alert(err.response?.data?.message || "Failed to update favorite");
     }
-  };
+  }, [user, navigate, isFavorite, id]);
+
+  useEffect(() => {
+    fetchGame();
+    fetchReviews();
+    checkFavorite();
+  }, [fetchGame, fetchReviews, checkFavorite]);
+
+  // Register voice command handlers
+  useEffect(() => {
+    // Handler for setting star rating
+    registerHandler('setRating', (rating) => {
+      setNewReview(prev => ({ ...prev, rating }));
+    });
+
+    // Handler for setting review content
+    registerHandler('setReviewContent', (content) => {
+      setNewReview(prev => ({ ...prev, content: prev.content + ' ' + content }));
+    });
+
+    // Handler for submitting review
+    registerHandler('submitReview', () => {
+      if (formRef.current && user && newReview.content) {
+        formRef.current.requestSubmit();
+      }
+    });
+
+    // Handler for toggling favorite
+    registerHandler('toggleFavorite', () => {
+      toggleFavorite();
+    });
+
+    return () => {
+      unregisterHandler('setRating');
+      unregisterHandler('setReviewContent');
+      unregisterHandler('submitReview');
+      unregisterHandler('toggleFavorite');
+    };
+  }, [registerHandler, unregisterHandler, user, newReview.content, toggleFavorite]);
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -380,7 +417,7 @@ const GameDetail = ({ user }) => {
 
               {/* Review Form */}
               {user ? (
-                <form onSubmit={handleSubmitReview} className="mb-6">
+                <form ref={formRef} onSubmit={handleSubmitReview} className="mb-6">
                   <div className="p-4 bg-[#1f1f2e] rounded-xl border-2 border-orange-500/20">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-gray-300">Your Rating:</span>
