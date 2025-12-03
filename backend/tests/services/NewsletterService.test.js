@@ -3,20 +3,26 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import User from "../../../models/User.js";
 import newsletterService from "../../../services/NewsletterService.js";
-import emailService from "../../../services/EmailService.js";
 
 // Load environment variables
 dotenv.config();
+
+// Create mock functions that will be used in the mock
+const mockSend = vi.fn();
+const mockIsConfigured = vi.fn(() => true);
 
 // Mock EmailService
 vi.mock("../../../services/EmailService.js", () => {
   return {
     default: {
-      send: vi.fn(),
-      isConfigured: vi.fn(() => true),
+      send: mockSend,
+      isConfigured: mockIsConfigured,
     },
   };
 });
+
+// Import emailService after mocking
+import emailService from "../../../services/EmailService.js";
 
 describe("NewsletterService", () => {
   let testUsers = [];
@@ -56,11 +62,11 @@ describe("NewsletterService", () => {
     // Clean up test users
     await User.deleteMany({ email: { $regex: /^test.*@test\.com$/ } });
     testUsers = [];
-    // Reset mocks to default behavior - use resetAllMocks to keep mock functions intact
-    vi.resetAllMocks();
+    // Clear mock call history but keep mock implementations
+    vi.clearAllMocks();
     // Restore default mock implementations
-    emailService.send.mockResolvedValue(undefined);
-    emailService.isConfigured.mockReturnValue(true);
+    mockSend.mockResolvedValue(undefined);
+    mockIsConfigured.mockReturnValue(true);
   });
 
   describe("sendNewGameAnnouncement", () => {
@@ -102,11 +108,11 @@ describe("NewsletterService", () => {
       expect(result.failed).toBe(0);
 
       // Verify emailService.send was called twice (for opted-in users only)
-      expect(emailService.send).toHaveBeenCalledTimes(2);
+      expect(mockSend).toHaveBeenCalledTimes(2);
 
       // Verify correct email content
-      const firstCall = emailService.send.mock.calls[0][0];
-      const secondCall = emailService.send.mock.calls[1][0];
+      const firstCall = mockSend.mock.calls[0][0];
+      const secondCall = mockSend.mock.calls[1][0];
 
       expect(firstCall.to).toBe("test1@test.com");
       expect(firstCall.subject).toBe("New game added: Test Game");
@@ -139,12 +145,12 @@ describe("NewsletterService", () => {
 
       expect(result.sent).toBe(0);
       expect(result.failed).toBe(0);
-      expect(emailService.send).not.toHaveBeenCalled();
+      expect(mockSend).not.toHaveBeenCalled();
     });
 
     it("should handle email sending failures gracefully", async () => {
       // Mock emailService.send to fail for first user
-      emailService.send
+      mockSend
         .mockRejectedValueOnce(new Error("Email failed"))
         .mockResolvedValueOnce(undefined);
 
@@ -173,7 +179,7 @@ describe("NewsletterService", () => {
       // One should succeed, one should fail
       expect(result.sent).toBe(1);
       expect(result.failed).toBe(1);
-      expect(emailService.send).toHaveBeenCalledTimes(2);
+      expect(mockSend).toHaveBeenCalledTimes(2);
     });
 
     it("should include game title in email subject and body", async () => {
@@ -193,7 +199,7 @@ describe("NewsletterService", () => {
 
       await newsletterService.sendNewGameAnnouncement(game);
 
-      const callArgs = emailService.send.mock.calls[0][0];
+      const callArgs = mockSend.mock.calls[0][0];
       expect(callArgs.subject).toBe("New game added: Amazing Game Title");
       expect(callArgs.html).toContain("Amazing Game Title");
       expect(callArgs.html).toContain("Check It Out");
@@ -213,7 +219,7 @@ describe("NewsletterService", () => {
 
     it("should return zero sent/failed if email service is not configured", async () => {
       // Mock emailService to return false for isConfigured
-      emailService.isConfigured.mockReturnValueOnce(false);
+      mockIsConfigured.mockReturnValueOnce(false);
 
       const optedInUser = await User.create({
         username: "testuser1",
@@ -232,7 +238,7 @@ describe("NewsletterService", () => {
 
       expect(result.sent).toBe(0);
       expect(result.failed).toBe(0);
-      expect(emailService.send).not.toHaveBeenCalled();
+      expect(mockSend).not.toHaveBeenCalled();
     });
   });
 
@@ -276,4 +282,3 @@ describe("NewsletterService", () => {
     });
   });
 });
-
