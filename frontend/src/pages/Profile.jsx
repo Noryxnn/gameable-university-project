@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { FaUpload, FaEdit, FaGamepad } from "react-icons/fa";
+import { FaUpload, FaEdit, FaGamepad, FaCrown } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { FaFacebook, FaInstagram, FaPlaystation, FaXbox } from "react-icons/fa";
 
@@ -306,9 +306,23 @@ const Profile = ({ user, setUser }) => {
                     </>
                   ) : (
                     <>
-                      <h1 className="text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                        {profileData.username}
-                      </h1>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                          {profileData.username}
+                        </h1>
+                        {user?.isAdmin && (
+                          <span className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border border-yellow-400/50 rounded-full text-xs font-bold flex items-center gap-1">
+                            <FaCrown className="w-3 h-3" />
+                            ADMIN
+                          </span>
+                        )}
+                        {user?.isCoAdmin && !user?.isAdmin && (
+                          <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white border border-purple-400/50 rounded-full text-xs font-bold flex items-center gap-1">
+                            <FaCrown className="w-3 h-3" />
+                            CO-ADMIN
+                          </span>
+                        )}
+                      </div>
                       <div className="text-gray-400 text-sm sm:text-base">{profileData.email}</div>
                     </>
                   )}

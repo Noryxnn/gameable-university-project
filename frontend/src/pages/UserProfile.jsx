@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { FaUser, FaArrowLeft, FaGamepad, FaXbox, FaPlaystation, FaFacebook, FaInstagram, FaUserPlus, FaUserCheck, FaUserClock, FaUserMinus, FaBan, FaTrash, FaCheckCircle } from 'react-icons/fa';
+import { FaUser, FaArrowLeft, FaGamepad, FaXbox, FaPlaystation, FaFacebook, FaInstagram, FaUserPlus, FaUserCheck, FaUserClock, FaUserMinus, FaBan, FaTrash, FaCheckCircle, FaCrown } from 'react-icons/fa';
 import { FaXTwitter } from 'react-icons/fa6';
 
 const UserProfile = ({ user: currentUser }) => {
@@ -234,10 +234,22 @@ const UserProfile = ({ user: currentUser }) => {
 
               {/* User Details */}
               <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                     {userProfile.username}
                   </h1>
+                  {userProfile.isAdmin && (
+                    <span className="px-3 py-1 bg-gradient-to-r from-yellow-500 to-orange-500 text-white border border-yellow-400/50 rounded-full text-xs font-bold flex items-center gap-1">
+                      <FaCrown className="w-3 h-3" />
+                      ADMIN
+                    </span>
+                  )}
+                  {userProfile.isCoAdmin && !userProfile.isAdmin && (
+                    <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white border border-purple-400/50 rounded-full text-xs font-bold flex items-center gap-1">
+                      <FaCrown className="w-3 h-3" />
+                      CO-ADMIN
+                    </span>
+                  )}
                   {userProfile.isBanned && (
                     <span className="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/50 rounded-full text-xs font-medium">
                       BANNED
