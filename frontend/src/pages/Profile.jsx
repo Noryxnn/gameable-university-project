@@ -239,38 +239,38 @@ const Profile = ({ user, setUser }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 py-20 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 py-8 sm:py-12 md:py-20 flex items-center justify-center">
       <div className="container mx-auto px-4 max-w-4xl">
-        <div className="bg-black/60 backdrop-blur-xl border-2 border-purple-500/50 rounded-lg p-8 md:p-12">
+        <div className="bg-black/60 backdrop-blur-xl border-2 border-purple-500/50 rounded-lg p-4 sm:p-6 md:p-8 lg:p-12">
             {error && (
-              <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-300">
+              <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-300 text-sm sm:text-base">
                 {error}
               </div>
             )}
 
             {/* Profile Information Section */}
-            <div className="mb-8">
-              <div className="flex flex-col md:flex-row gap-8 items-start">
+            <div className="mb-6 sm:mb-8">
+              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 md:gap-8 items-center sm:items-start">
                 {/* Profile Picture */}
-                <div className="relative">
+                <div className="relative flex-shrink-0">
                   {getImageSrc(profileData.profilePicture) ? (
                     <img
                       src={getImageSrc(profileData.profilePicture)}
                       alt="Profile"
-                      className="w-32 h-32 rounded-full object-cover border-4 border-purple-400/50"
+                      className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-purple-400/50"
                       onError={(e) => {
                         e.target.style.display = "none";
                       }}
                     />
                   ) : (
-                    <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center border-4 border-purple-400/50">
-                      <span className="text-white text-4xl font-bold">
+                    <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center border-4 border-purple-400/50">
+                      <span className="text-white text-3xl sm:text-4xl font-bold">
                         {profileData.username?.charAt(0).toUpperCase() || "U"}
                       </span>
                     </div>
                   )}
                   {isEditing && (
-                    <label className="absolute bottom-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-full cursor-pointer hover:scale-110 transition-transform border-2 border-white">
+                    <label className="absolute bottom-0 right-0 bg-gradient-to-r from-purple-600 to-pink-600 p-2 sm:p-3 rounded-full cursor-pointer hover:scale-110 transition-transform border-2 border-white">
                       <input
                         type="file"
                         accept="image/*"
@@ -278,18 +278,18 @@ const Profile = ({ user, setUser }) => {
                         className="hidden"
                         disabled={uploading}
                       />
-                      <FaUpload className="text-white w-5 h-5" />
+                      <FaUpload className="text-white w-4 h-4 sm:w-5 sm:h-5" />
                     </label>
                   )}
                   {uploading && (
                     <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center">
-                      <div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
                 </div>
 
                 {/* User Details */}
-                <div className="flex-1 space-y-4">
+                <div className="flex-1 space-y-3 sm:space-y-4 w-full text-center sm:text-left">
                   {isEditing ? (
                     <>
                       <input
@@ -299,28 +299,28 @@ const Profile = ({ user, setUser }) => {
                         onChange={handleChange}
                         required
                         minLength={1}
-                        className="bg-black/40 border-2 border-purple-400/30 text-white text-2xl font-bold rounded-lg px-4 py-2 w-full"
+                        className="bg-black/40 border-2 border-purple-400/30 text-white text-xl sm:text-2xl font-bold rounded-lg px-3 sm:px-4 py-2 w-full"
                         placeholder="Your name"
                       />
-                      <div className="text-gray-400">{profileData.email}</div>
+                      <div className="text-gray-400 text-sm sm:text-base">{profileData.email}</div>
                     </>
                   ) : (
                     <>
-                      <h1 className="text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                      <h1 className="text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                         {profileData.username}
                       </h1>
-                      <div className="text-gray-400">{profileData.email}</div>
+                      <div className="text-gray-400 text-sm sm:text-base">{profileData.email}</div>
                     </>
                   )}
-                  <div className="text-sm text-gray-500">
+                  <div className="text-xs sm:text-sm text-gray-500">
                     {formatDate(user?.createdAt)}
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-center sm:justify-start">
                     {!isEditing ? (
                       <button
                         onClick={() => setIsEditing(true)}
                         disabled={saving}
-                        className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                        className="flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 text-sm sm:text-base"
                       >
                         <FaEdit className="w-4 h-4" />
                         Edit Profile
@@ -332,7 +332,7 @@ const Profile = ({ user, setUser }) => {
                             handleSubmit(e);
                           }}
                           disabled={saving}
-                          className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                          className="flex items-center justify-center gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 text-sm sm:text-base"
                         >
                           {saving ? "Saving..." : "Save"}
                         </button>
@@ -342,7 +342,7 @@ const Profile = ({ user, setUser }) => {
                             setError("");
                             fetchProfile();
                           }}
-                          className="px-4 py-2 bg-black/40 border-2 border-red-500/50 text-white hover:bg-red-900/40 rounded-lg transition-colors"
+                          className="px-4 py-2 bg-black/40 border-2 border-red-500/50 text-white hover:bg-red-900/40 rounded-lg transition-colors text-sm sm:text-base"
                         >
                           Cancel
                         </button>
@@ -354,18 +354,18 @@ const Profile = ({ user, setUser }) => {
             </div>
 
             {/* Bio Section */}
-            <div className="mb-8">
-              <h2 className="text-white text-lg font-bold mb-3 block">Bio</h2>
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-white text-base sm:text-lg font-bold mb-2 sm:mb-3 block">Bio</h2>
               {isEditing ? (
                 <textarea
                   name="bio"
                   value={profileData.bio}
                   onChange={handleChange}
                   placeholder="Tell us about yourself..."
-                  className="w-full bg-black/40 border-2 border-purple-400/30 text-white rounded-lg px-4 py-3 min-h-24 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full bg-black/40 border-2 border-purple-400/30 text-white rounded-lg px-3 sm:px-4 py-2 sm:py-3 min-h-20 sm:min-h-24 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm sm:text-base"
                 />
               ) : (
-                <p className="text-white/90 bg-black/20 p-4 rounded-lg border border-purple-500/20">
+                <p className="text-white/90 bg-black/20 p-3 sm:p-4 rounded-lg border border-purple-500/20 text-sm sm:text-base">
                   {profileData.bio || "No bio yet."}
                 </p>
               )}
@@ -373,8 +373,8 @@ const Profile = ({ user, setUser }) => {
 
             {/* Gaming Platform Connections */}
             <div>
-              <h2 className="text-white text-lg font-bold mb-4 block">Gaming Platform Connections</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h2 className="text-white text-base sm:text-lg font-bold mb-3 sm:mb-4 block">Gaming Platform Connections</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {/* Steam */}
                 <div className="space-y-2">
                   <div className="text-purple-300 flex items-center gap-2">

@@ -98,9 +98,9 @@ const VoiceCommandButton = ({
     <>
       {/* Voice Feedback Overlay */}
       {showFeedback && (
-        <div className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300">
+        <div className="fixed top-20 sm:top-24 left-1/2 transform -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-300 w-[90%] sm:w-auto">
           <div className={`
-            px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-xl border-2 max-w-md
+            px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl shadow-2xl backdrop-blur-xl border-2 max-w-md mx-auto
             ${feedbackType === 'success' ? 'bg-green-900/90 border-green-500/50 text-green-100' : ''}
             ${feedbackType === 'error' ? 'bg-red-900/90 border-red-500/50 text-red-100' : ''}
             ${feedbackType === 'info' ? 'bg-purple-900/90 border-purple-500/50 text-purple-100' : ''}
@@ -125,15 +125,15 @@ const VoiceCommandButton = ({
       )}
 
       {/* Floating Voice Button */}
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end gap-2 sm:gap-3 safe-area-bottom">
         {/* Help Button */}
         <button
           onClick={onShowHelp}
-          className="w-12 h-12 rounded-full bg-gray-900/90 backdrop-blur-xl border-2 border-purple-500/50 text-purple-400 hover:border-purple-400 hover:text-purple-300 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-900/90 backdrop-blur-xl border-2 border-purple-500/50 text-purple-400 hover:border-purple-400 hover:text-purple-300 shadow-lg shadow-purple-500/20 transition-all flex items-center justify-center no-min-touch"
           title="Voice command help"
           aria-label="Show voice command help"
         >
-          <FaQuestionCircle className="w-5 h-5" />
+          <FaQuestionCircle className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
         {/* Main Microphone Button */}
@@ -141,7 +141,7 @@ const VoiceCommandButton = ({
           onClick={onToggle}
           disabled={!isSupported}
           className={`
-            w-16 h-16 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center
+            w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center no-min-touch
             ${isListening 
               ? 'bg-gradient-to-r from-red-500 to-pink-500 border-4 border-white/30 scale-110 animate-pulse shadow-red-500/50' 
               : 'bg-gradient-to-r from-purple-600 to-pink-600 border-4 border-purple-400/30 hover:scale-105 hover:shadow-purple-500/50'
@@ -152,25 +152,25 @@ const VoiceCommandButton = ({
           aria-label={isListening ? 'Stop voice command' : 'Start voice command'}
         >
           {isListening ? (
-            <FaMicrophoneSlash className="w-7 h-7 text-white" />
+            <FaMicrophoneSlash className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           ) : (
-            <FaMicrophone className="w-7 h-7 text-white" />
+            <FaMicrophone className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           )}
         </button>
 
         {/* Listening indicator ring */}
         {isListening && (
-          <div className="absolute bottom-0 right-0 w-16 h-16 rounded-full border-4 border-pink-400 animate-ping pointer-events-none" />
+          <div className="absolute bottom-0 right-0 w-14 h-14 sm:w-16 sm:h-16 rounded-full border-4 border-pink-400 animate-ping pointer-events-none" />
         )}
       </div>
 
       {/* Error Toast */}
       {error && (
-        <div className="fixed bottom-28 right-6 z-50 animate-in fade-in slide-in-from-right-4 duration-300">
-          <div className="px-4 py-3 rounded-xl bg-red-900/90 backdrop-blur-xl border-2 border-red-500/50 text-red-100 shadow-xl max-w-xs">
+        <div className="fixed bottom-24 sm:bottom-28 right-4 sm:right-6 left-4 sm:left-auto z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-red-900/90 backdrop-blur-xl border-2 border-red-500/50 text-red-100 shadow-xl max-w-xs mx-auto sm:mx-0">
             <div className="flex items-center gap-2">
               <FaMicrophoneSlash className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm">
+              <span className="text-xs sm:text-sm">
                 {error === 'not-allowed' 
                   ? 'Microphone access denied. Please enable it in your browser settings.'
                   : error === 'no-speech'
@@ -266,7 +266,7 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
@@ -274,43 +274,43 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
       />
       
       {/* Modal */}
-      <div className="relative bg-gradient-to-br from-gray-900 via-purple-900/50 to-gray-900 border-2 border-purple-500/50 rounded-2xl shadow-2xl shadow-purple-500/20 max-w-3xl w-full max-h-[80vh] overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+      <div className="relative bg-gradient-to-br from-gray-900 via-purple-900/50 to-gray-900 border-t-2 sm:border-2 border-purple-500/50 rounded-t-2xl sm:rounded-2xl shadow-2xl shadow-purple-500/20 w-full sm:max-w-3xl max-h-[90vh] sm:max-h-[80vh] overflow-hidden animate-in fade-in slide-in-from-bottom sm:zoom-in-95 duration-300">
         {/* Header */}
-        <div className="sticky top-0 bg-black/80 backdrop-blur-xl border-b border-purple-500/30 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center">
-              <FaMicrophone className="w-5 h-5 text-white" />
+        <div className="sticky top-0 bg-black/80 backdrop-blur-xl border-b border-purple-500/30 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center flex-shrink-0">
+              <FaMicrophone className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Voice Commands</h2>
-              <p className="text-sm text-purple-400">Say these commands to control GameAble</p>
+              <h2 className="text-base sm:text-xl font-bold text-white">Voice Commands</h2>
+              <p className="text-xs sm:text-sm text-purple-400 hidden sm:block">Say these commands to control GameAble</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors flex-shrink-0 no-min-touch"
             aria-label="Close help"
           >
-            <FaTimes className="w-5 h-5" />
+            <FaTimes className="w-4 h-4 sm:w-5 sm:h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
-          <div className="grid md:grid-cols-2 gap-6">
+        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-60px)] sm:max-h-[calc(80vh-80px)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {commands.map((category, idx) => (
-              <div key={idx} className="space-y-3">
-                <h3 className="text-lg font-bold text-white">{category.category}</h3>
-                <div className="space-y-2">
+              <div key={idx} className="space-y-2 sm:space-y-3">
+                <h3 className="text-base sm:text-lg font-bold text-white">{category.category}</h3>
+                <div className="space-y-1.5 sm:space-y-2">
                   {category.items.map((item, itemIdx) => (
                     <div 
                       key={itemIdx}
-                      className="flex items-start gap-3 p-3 bg-black/30 rounded-xl border border-purple-500/20"
+                      className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3 p-2 sm:p-3 bg-black/30 rounded-lg sm:rounded-xl border border-purple-500/20"
                     >
-                      <code className="text-cyan-400 font-mono text-sm whitespace-nowrap">
+                      <code className="text-cyan-400 font-mono text-xs sm:text-sm">
                         {item.command}
                       </code>
-                      <span className="text-white/70 text-sm">
+                      <span className="text-white/70 text-xs sm:text-sm">
                         {item.description}
                       </span>
                     </div>
@@ -321,10 +321,10 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
           </div>
 
           {/* Tips */}
-          <div className="mt-6 p-4 bg-purple-600/20 rounded-xl border border-purple-500/30">
-            <h4 className="font-bold text-purple-300 mb-2">💡 Tips</h4>
-            <ul className="text-sm text-white/70 space-y-1">
-              <li>• Click the microphone button or say "Stop" to stop listening</li>
+          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-purple-600/20 rounded-xl border border-purple-500/30 safe-area-bottom">
+            <h4 className="font-bold text-purple-300 mb-2 text-sm sm:text-base">💡 Tips</h4>
+            <ul className="text-xs sm:text-sm text-white/70 space-y-1">
+              <li>• Tap the microphone button or say "Stop" to stop listening</li>
               <li>• Speak clearly and wait for the feedback to appear</li>
               <li>• Commands work on any page where they make sense</li>
               <li>• You can say numbers as words: "five stars" or "5 stars"</li>
