@@ -195,6 +195,11 @@ router.get("/me", protect, async (req, res) => {
 // Update user preferences (newsletter opt-in)
 router.put("/me/preferences", protect, async (req, res) => {
   try {
+    // Guard: Check if user is authenticated
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
     const { newsletterOptIn } = req.body;
     
     // Validate newsletterOptIn is a boolean

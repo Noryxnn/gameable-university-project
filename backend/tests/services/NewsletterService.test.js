@@ -56,7 +56,11 @@ describe("NewsletterService", () => {
     // Clean up test users
     await User.deleteMany({ email: { $regex: /^test.*@test\.com$/ } });
     testUsers = [];
+    // Reset mocks to default behavior
     vi.clearAllMocks();
+    // Restore default mock implementations
+    emailService.send.mockResolvedValue(undefined);
+    emailService.isConfigured.mockReturnValue(true);
   });
 
   describe("sendNewGameAnnouncement", () => {
