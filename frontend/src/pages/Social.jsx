@@ -140,88 +140,93 @@ const Social = ({ user }) => {
     return (
       <div
         key={userProfile._id}
-        className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-2 border-purple-400/30 p-6 rounded-xl hover:border-purple-400/60 transition-all"
+        className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-2 border-purple-400/30 p-4 sm:p-6 rounded-xl hover:border-purple-400/60 transition-all"
       >
-        <div className="flex items-center gap-4">
-          {/* Avatar */}
-          <button
-            onClick={() => navigate(`/user/${userProfile._id}`)}
-            className="flex-shrink-0 hover:scale-105 transition-transform"
-          >
-            {getImageSrc(userProfile.profilePicture) ? (
-              <img
-                src={getImageSrc(userProfile.profilePicture)}
-                alt={userProfile.username}
-                className="w-16 h-16 rounded-full object-cover border-2 border-purple-400/50"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-              />
-            ) : null}
-            <div
-              className={`w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center border-2 border-purple-400/50 ${getImageSrc(userProfile.profilePicture) ? 'hidden' : ''}`}
-            >
-              <FaUser className="w-8 h-8 text-white" />
-            </div>
-          </button>
-
-          {/* User Info */}
-          <div className="flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          {/* Avatar and Info Row */}
+          <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
+            {/* Avatar */}
             <button
               onClick={() => navigate(`/user/${userProfile._id}`)}
-              className="font-bold text-white text-lg hover:text-purple-300 transition-colors text-left truncate block w-full"
+              className="flex-shrink-0 hover:scale-105 transition-transform"
             >
-              {userProfile.username}
+              {getImageSrc(userProfile.profilePicture) ? (
+                <img
+                  src={getImageSrc(userProfile.profilePicture)}
+                  alt={userProfile.username}
+                  className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border-2 border-purple-400/50"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div
+                className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center border-2 border-purple-400/50 ${getImageSrc(userProfile.profilePicture) ? 'hidden' : ''}`}
+              >
+                <FaUser className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+              </div>
             </button>
-            <div className="text-sm text-gray-400 truncate">{userProfile.email}</div>
-            {userProfile.bio && (
-              <p className="text-sm text-white/70 mt-1 line-clamp-2">{userProfile.bio}</p>
-            )}
+
+            {/* User Info */}
+            <div className="flex-1 min-w-0">
+              <button
+                onClick={() => navigate(`/user/${userProfile._id}`)}
+                className="font-bold text-white text-base sm:text-lg hover:text-purple-300 transition-colors text-left truncate block w-full"
+              >
+                {userProfile.username}
+              </button>
+              <div className="text-xs sm:text-sm text-gray-400 truncate">{userProfile.email}</div>
+              {userProfile.bio && (
+                <p className="text-xs sm:text-sm text-white/70 mt-1 line-clamp-2 hidden sm:block">{userProfile.bio}</p>
+              )}
+            </div>
           </div>
 
           {/* Action Buttons */}
-          {isRequest ? (
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleAcceptRequest(userProfile._id)}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                Accept
-              </button>
-              <button
-                onClick={() => handleDeclineRequest(userProfile._id)}
-                className="bg-black/40 border-2 border-red-500/50 text-white hover:bg-red-900/40 px-4 py-2 rounded-lg transition-colors"
-              >
-                Decline
-              </button>
-            </div>
-          ) : showAddButton && (
-            isFriend ? (
-              <button
-                onClick={() => handleRemoveFriend(userProfile._id)}
-                className="bg-black/40 border-2 border-red-500/50 text-white hover:bg-red-900/40 flex-shrink-0 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <FaUserMinus className="w-4 h-4" />
-                Remove
-              </button>
-            ) : isRequestSent ? (
-              <button
-                className="bg-black/40 border-2 border-gray-500/50 text-white hover:bg-gray-900/40 flex-shrink-0 px-4 py-2 rounded-lg transition-colors"
-                disabled
-              >
-                Request Sent
-              </button>
-            ) : (
-              <button
-                onClick={() => handleSendRequest(userProfile._id)}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 flex-shrink-0 px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-              >
-                <FaUserPlus className="w-4 h-4" />
-                Add Friend
-              </button>
-            )
-          )}
+          <div className="w-full sm:w-auto sm:flex-shrink-0">
+            {isRequest ? (
+              <div className="flex gap-2 w-full sm:w-auto">
+                <button
+                  onClick={() => handleAcceptRequest(userProfile._id)}
+                  className="flex-1 sm:flex-none bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base"
+                >
+                  Accept
+                </button>
+                <button
+                  onClick={() => handleDeclineRequest(userProfile._id)}
+                  className="flex-1 sm:flex-none bg-black/40 border-2 border-red-500/50 text-white hover:bg-red-900/40 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base"
+                >
+                  Decline
+                </button>
+              </div>
+            ) : showAddButton && (
+              isFriend ? (
+                <button
+                  onClick={() => handleRemoveFriend(userProfile._id)}
+                  className="w-full sm:w-auto bg-black/40 border-2 border-red-500/50 text-white hover:bg-red-900/40 px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                >
+                  <FaUserMinus className="w-4 h-4" />
+                  <span>Remove</span>
+                </button>
+              ) : isRequestSent ? (
+                <button
+                  className="w-full sm:w-auto bg-black/40 border-2 border-gray-500/50 text-white hover:bg-gray-900/40 px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base"
+                  disabled
+                >
+                  Request Sent
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSendRequest(userProfile._id)}
+                  className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 px-3 sm:px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
+                >
+                  <FaUserPlus className="w-4 h-4" />
+                  <span>Add Friend</span>
+                </button>
+              )
+            )}
+          </div>
         </div>
       </div>
     );
@@ -236,9 +241,9 @@ const Social = ({ user }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 py-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 py-8 sm:py-12 md:py-20">
       <div className="container mx-auto px-4 max-w-5xl">
-        <h1 className="text-5xl font-black mb-8 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black mb-6 sm:mb-8 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent text-center">
           Social
         </h1>
 
@@ -253,44 +258,46 @@ const Social = ({ user }) => {
 
         {/* Tabs */}
         <div className="mb-8">
-          <div className="grid grid-cols-3 gap-2 bg-black/60 border-2 border-purple-500/30 rounded-xl p-1">
+          <div className="grid grid-cols-3 gap-1 sm:gap-2 bg-black/60 border-2 border-purple-500/30 rounded-xl p-1">
             <button
               onClick={() => setActiveTab('friends')}
-              className={`px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+              className={`px-2 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-xs sm:text-base ${
                 activeTab === 'friends'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                   : 'text-white hover:bg-purple-600/20'
               }`}
             >
-              <FaUsers className="w-4 h-4" />
-              Friends ({friends.length})
+              <FaUsers className="w-4 h-4 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Friends</span>
+              <span className="sm:hidden">Friends</span>
+              <span className="text-xs opacity-80">({friends.length})</span>
             </button>
             <button
               onClick={() => setActiveTab('requests')}
-              className={`px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2 relative ${
+              className={`px-2 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-xs sm:text-base relative ${
                 activeTab === 'requests'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                   : 'text-white hover:bg-purple-600/20'
               }`}
             >
-              <FaUserPlus className="w-4 h-4" />
-              Requests
+              <FaUserPlus className="w-4 h-4 sm:w-4 sm:h-4" />
+              <span>Requests</span>
               {receivedRequests.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 sm:static bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                   {receivedRequests.length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setActiveTab('search')}
-              className={`px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+              className={`px-2 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-colors flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-xs sm:text-base ${
                 activeTab === 'search'
                   ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'
                   : 'text-white hover:bg-purple-600/20'
               }`}
             >
-              <FaSearch className="w-4 h-4" />
-              Search
+              <FaSearch className="w-4 h-4 sm:w-4 sm:h-4" />
+              <span>Search</span>
             </button>
           </div>
         </div>

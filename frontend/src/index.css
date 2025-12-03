@@ -200,19 +200,110 @@ html {
   html {
     font-size: 15px;
   }
+  
+  /* Prevent horizontal overflow */
+  body {
+    overflow-x: hidden;
+  }
 }
 
 /* Safe area for mobile notches and home indicators */
 @supports (padding: env(safe-area-inset-bottom)) {
-  .safe-area-inset-bottom {
+  .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  /* Fixed bottom elements should account for safe area */
+  .fixed-bottom-safe {
+    bottom: max(1.5rem, env(safe-area-inset-bottom));
   }
 }
 
 /* Improve touch targets on mobile */
 @media (max-width: 768px) {
-  button, a {
+  button:not(.no-min-touch), 
+  a:not(.no-min-touch),
+  [role="button"]:not(.no-min-touch) {
     min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Ensure inputs are readable */
+  input, textarea, select {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 641px) and (max-width: 1024px) {
+  html {
+    font-size: 15.5px;
+  }
+}
+
+/* Large desktop */
+@media (min-width: 1536px) {
+  html {
+    font-size: 17px;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Mobile-specific utility classes */
+@media (max-width: 640px) {
+  .mobile-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+  
+  .mobile-center {
+    text-align: center !important;
+    justify-content: center !important;
+  }
+  
+  .mobile-hide {
+    display: none !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .desktop-hide {
+    display: none !important;
+  }
+}
+
+/* Touch-friendly spacing */
+@media (pointer: coarse) {
+  .touch-spacing > * + * {
+    margin-top: 0.75rem;
+  }
+  
+  /* Larger tap targets for touch devices */
+  .touch-target {
+    padding: 0.75rem 1rem;
   }
 }
 

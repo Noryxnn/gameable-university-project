@@ -259,18 +259,18 @@ const GameDetail = ({ user }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 py-8">
-      <div className="container mx-auto px-4 sm:px-6">
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 py-4 sm:py-6 md:py-8">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6">
         {/* Back Button */}
         <button
           onClick={() => navigate("/home")}
-          className="mb-6 flex items-center gap-2 px-5 py-2.5 bg-black/40 border-2 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400 rounded-xl font-semibold transition-all"
+          className="mb-4 sm:mb-6 flex items-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 bg-black/40 border-2 border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400 rounded-xl font-semibold transition-all text-sm sm:text-base"
         >
-          <FaArrowLeft className="w-4 h-4" />
+          <FaArrowLeft className="w-3 h-3 sm:w-4 sm:h-4" />
           <span>Back to Browse</span>
         </button>
 
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Video Trailer */}
@@ -307,64 +307,66 @@ const GameDetail = ({ user }) => {
             </div>
 
             {/* Game Info Card */}
-            <div className="p-6 border-2 border-cyan-500/30 rounded-2xl shadow-lg bg-gradient-to-br from-[#16161f] to-[#1f1f2e] shadow-cyan-500/20">
-              <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-6">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <h1 className="text-cyan-400 text-2xl sm:text-3xl lg:text-4xl font-black">
-                      {game.title}
-                    </h1>
-                    {(user?.isAdmin || user?.isCoAdmin) && (
-                      <button
-                        onClick={handleDeleteGame}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-xl transition-colors font-medium"
-                        title="Delete Game (Admin)"
-                      >
-                        <FaTrash className="w-4 h-4" />
-                        <span className="hidden sm:inline">Delete Game</span>
-                      </button>
-                    )}
-                  </div>
+            <div className="p-4 sm:p-6 border-2 border-cyan-500/30 rounded-xl sm:rounded-2xl shadow-lg bg-gradient-to-br from-[#16161f] to-[#1f1f2e] shadow-cyan-500/20">
+              <div className="flex flex-col gap-4 mb-4 sm:mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                      <h1 className="text-cyan-400 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black">
+                        {game.title}
+                      </h1>
+                      {(user?.isAdmin || user?.isCoAdmin) && (
+                        <button
+                          onClick={handleDeleteGame}
+                          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg sm:rounded-xl transition-colors font-medium text-xs sm:text-sm"
+                          title="Delete Game (Admin)"
+                        >
+                          <FaTrash className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="hidden sm:inline">Delete Game</span>
+                        </button>
+                      )}
+                    </div>
 
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <FaStar className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400 fill-current" />
-                      <span className="text-xl sm:text-2xl text-white font-bold">
-                        {game.reviewScore || "N/A"}
+                    <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <FaStar className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-yellow-400 fill-current" />
+                        <span className="text-lg sm:text-xl md:text-2xl text-white font-bold">
+                          {game.reviewScore || "N/A"}
+                        </span>
+                      </div>
+                      <span className="text-xs sm:text-sm md:text-base text-gray-400">
+                        ({(game.reviewCount || 0).toLocaleString()})
                       </span>
                     </div>
-                    <span className="text-sm sm:text-base text-gray-400">
-                      ({(game.reviewCount || 0).toLocaleString()})
-                    </span>
+
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      {game.genre?.split(",").map((g, idx) => (
+                        <span
+                          key={idx}
+                          className="bg-purple-600/20 text-purple-400 px-2 sm:px-3 py-1 sm:py-1.5 border-2 border-purple-500/50 text-xs sm:text-sm font-semibold rounded-full"
+                        >
+                          {g.trim()}
+                        </span>
+                      ))}
+                    </div>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {game.genre?.split(",").map((g, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-purple-600/20 text-purple-400 px-3 py-1.5 border-2 border-purple-500/50 text-sm font-semibold rounded-full"
-                      >
-                        {g.trim()}
-                      </span>
-                    ))}
-                  </div>
+                  <button
+                    onClick={toggleFavorite}
+                    className={`w-full sm:w-auto flex-shrink-0 flex items-center justify-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl font-bold transition-all text-sm sm:text-base ${
+                      isFavorite
+                        ? "bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-lg shadow-pink-500/30"
+                        : "bg-white/10 hover:bg-white/20 text-white border-2 border-white/20"
+                    }`}
+                  >
+                    {isFavorite ? (
+                      <FaHeart className="w-4 h-4 sm:w-5 sm:h-5" />
+                    ) : (
+                      <FaRegHeart className="w-4 h-4 sm:w-5 sm:h-5" />
+                    )}
+                    <span>{isFavorite ? "Saved" : "Save"}</span>
+                  </button>
                 </div>
-
-                <button
-                  onClick={toggleFavorite}
-                  className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold transition-all ${
-                    isFavorite
-                      ? "bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white shadow-lg shadow-pink-500/30"
-                      : "bg-white/10 hover:bg-white/20 text-white border-2 border-white/20"
-                  }`}
-                >
-                  {isFavorite ? (
-                    <FaHeart className="w-5 h-5" />
-                  ) : (
-                    <FaRegHeart className="w-5 h-5" />
-                  )}
-                  <span>{isFavorite ? "Saved" : "Save"}</span>
-                </button>
               </div>
 
               <hr className="border-cyan-500/30 my-6" />
@@ -412,25 +414,25 @@ const GameDetail = ({ user }) => {
             </div>
 
             {/* Reviews Section */}
-            <div className="p-6 border-2 border-orange-500/30 rounded-2xl shadow-lg bg-gradient-to-br from-[#16161f] to-[#1f1f2e]">
-              <h2 className="text-orange-400 text-xl font-bold mb-4">Reviews & Ratings</h2>
+            <div className="p-4 sm:p-6 border-2 border-orange-500/30 rounded-xl sm:rounded-2xl shadow-lg bg-gradient-to-br from-[#16161f] to-[#1f1f2e]">
+              <h2 className="text-orange-400 text-lg sm:text-xl font-bold mb-3 sm:mb-4">Reviews & Ratings</h2>
 
               {/* Review Form */}
               {user ? (
-                <form ref={formRef} onSubmit={handleSubmitReview} className="mb-6">
-                  <div className="p-4 bg-[#1f1f2e] rounded-xl border-2 border-orange-500/20">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-gray-300">Your Rating:</span>
+                <form ref={formRef} onSubmit={handleSubmitReview} className="mb-4 sm:mb-6">
+                  <div className="p-3 sm:p-4 bg-[#1f1f2e] rounded-lg sm:rounded-xl border-2 border-orange-500/20">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 mb-3">
+                      <span className="text-gray-300 text-sm sm:text-base">Your Rating:</span>
                       <div className="flex gap-1">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             key={star}
                             type="button"
                             onClick={() => setNewReview({ ...newReview, rating: star })}
-                            className="focus:outline-none"
+                            className="focus:outline-none p-1 no-min-touch"
                           >
                             <FaStar
-                              className={`w-6 h-6 ${
+                              className={`w-6 h-6 sm:w-6 sm:h-6 ${
                                 star <= newReview.rating
                                   ? "text-yellow-400"
                                   : "text-gray-600"
@@ -446,22 +448,22 @@ const GameDetail = ({ user }) => {
                         setNewReview({ ...newReview, content: e.target.value })
                       }
                       placeholder="Write your review..."
-                      className="w-full bg-black/40 border-2 border-orange-500/30 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-400 resize-none"
+                      className="w-full bg-black/40 border-2 border-orange-500/30 rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-400 resize-none text-sm sm:text-base"
                       rows={3}
                       required
                     />
                     <button
                       type="submit"
                       disabled={submittingReview}
-                      className="mt-3 bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 text-black font-bold py-2 px-6 rounded-lg transition-all disabled:opacity-50"
+                      className="mt-3 w-full sm:w-auto bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-400 hover:to-yellow-400 text-black font-bold py-2 px-4 sm:px-6 rounded-lg transition-all disabled:opacity-50 text-sm sm:text-base"
                     >
                       {submittingReview ? "Submitting..." : "Submit Review"}
                     </button>
                   </div>
                 </form>
               ) : (
-                <div className="p-4 bg-[#1f1f2e] rounded-xl border-2 border-orange-500/20 mb-6 text-center">
-                  <p className="text-gray-400">
+                <div className="p-3 sm:p-4 bg-[#1f1f2e] rounded-lg sm:rounded-xl border-2 border-orange-500/20 mb-4 sm:mb-6 text-center">
+                  <p className="text-gray-400 text-sm sm:text-base">
                     Please{" "}
                     <button
                       onClick={() => navigate("/login")}
@@ -475,13 +477,13 @@ const GameDetail = ({ user }) => {
               )}
 
               {/* Reviews List */}
-              <h3 className="text-orange-400 font-semibold mb-3">
+              <h3 className="text-orange-400 font-semibold mb-2 sm:mb-3 text-sm sm:text-base">
                 Reviews ({reviews.length})
               </h3>
               {reviews.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No reviews yet. Be the first to review!</p>
+                <p className="text-gray-500 text-center py-4 text-sm sm:text-base">No reviews yet. Be the first to review!</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {reviews.map((review) => {
                     const isReviewOwner = user && review.userId === user._id;
                     const isAdminUser = user && (user.isAdmin || user.isCoAdmin);
@@ -490,13 +492,13 @@ const GameDetail = ({ user }) => {
                     return (
                       <div
                         key={review._id}
-                        className="p-4 bg-[#1f1f2e] rounded-xl border-2 border-orange-500/20"
+                        className="p-3 sm:p-4 bg-[#1f1f2e] rounded-lg sm:rounded-xl border-2 border-orange-500/20"
                       >
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="flex items-center gap-3 flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 mb-2">
+                          <div className="flex items-center gap-2 sm:gap-3 flex-1">
                             <div 
                               onClick={() => navigate(`/user/${review.userId}`)}
-                              className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all flex-shrink-0"
+                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center overflow-hidden cursor-pointer hover:ring-2 hover:ring-cyan-400 transition-all flex-shrink-0"
                             >
                               {review.profilePicture ? (
                                 <img
@@ -505,31 +507,31 @@ const GameDetail = ({ user }) => {
                                   className="w-full h-full object-cover"
                                 />
                               ) : (
-                                <span className="text-white font-bold">
+                                <span className="text-white font-bold text-xs sm:text-sm">
                                   {review.username?.charAt(0).toUpperCase()}
                                 </span>
                               )}
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                               <p 
                                 onClick={() => navigate(`/user/${review.userId}`)}
-                                className="text-white font-semibold cursor-pointer hover:text-cyan-400 transition-colors"
+                                className="text-white font-semibold cursor-pointer hover:text-cyan-400 transition-colors text-sm sm:text-base truncate"
                               >
                                 {review.username}
                               </p>
-                              <p className="text-gray-500 text-xs">
+                              <p className="text-gray-500 text-[10px] sm:text-xs">
                                 {new Date(review.createdAt).toLocaleDateString("en-US", {
                                   year: "numeric",
-                                  month: "long",
+                                  month: "short",
                                   day: "numeric",
                                 })}
                               </p>
                             </div>
-                            <div className="flex gap-0.5">
+                            <div className="flex gap-0.5 flex-shrink-0">
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <FaStar
                                   key={star}
-                                  className={`w-4 h-4 ${
+                                  className={`w-3 h-3 sm:w-4 sm:h-4 ${
                                     star <= review.rating
                                       ? "text-yellow-400"
                                       : "text-gray-600"
@@ -541,14 +543,14 @@ const GameDetail = ({ user }) => {
                           {canDelete && (
                             <button
                               onClick={() => handleDeleteReview(review._id, isReviewOwner)}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/50 rounded-lg transition-colors text-sm"
+                              className="self-end sm:self-auto flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/50 rounded-lg transition-colors text-xs sm:text-sm no-min-touch"
                               title={isAdminUser && !isReviewOwner ? "Delete as admin" : "Delete your review"}
                             >
                               <FaTrash className="w-3 h-3" />
                             </button>
                           )}
                         </div>
-                        <p className="text-gray-300">{review.content}</p>
+                        <p className="text-gray-300 text-sm sm:text-base">{review.content}</p>
                       </div>
                     );
                   })}
@@ -558,17 +560,17 @@ const GameDetail = ({ user }) => {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Accessibility Features */}
-            <div className="p-6 border-2 border-green-500/30 rounded-2xl shadow-lg bg-gradient-to-br from-[#16161f] to-[#1f1f2e] shadow-green-500/20">
-              <h2 className="text-green-400 text-lg font-bold mb-4">
+            <div className="p-4 sm:p-6 border-2 border-green-500/30 rounded-xl sm:rounded-2xl shadow-lg bg-gradient-to-br from-[#16161f] to-[#1f1f2e] shadow-green-500/20">
+              <h2 className="text-green-400 text-base sm:text-lg font-bold mb-3 sm:mb-4">
                 Accessibility Features
               </h2>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 sm:gap-2">
                 {game.accessibilityFeatures?.map((feature, idx) => (
                   <span
                     key={idx}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full border ${getAccessibilityColor(feature)}`}
+                    className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold rounded-full border ${getAccessibilityColor(feature)}`}
                   >
                     {getAccessibilityIcon(feature)}
                     {feature}
@@ -579,16 +581,16 @@ const GameDetail = ({ user }) => {
 
             {/* Game Features */}
             {game.features && game.features.length > 0 && (
-              <div className="p-6 border-2 border-cyan-500/30 rounded-2xl shadow-lg bg-gradient-to-br from-[#16161f] to-[#1f1f2e] shadow-cyan-500/20">
-                <h2 className="text-cyan-400 text-lg font-bold mb-4">Features</h2>
-                <ul className="space-y-3">
+              <div className="p-4 sm:p-6 border-2 border-cyan-500/30 rounded-xl sm:rounded-2xl shadow-lg bg-gradient-to-br from-[#16161f] to-[#1f1f2e] shadow-cyan-500/20">
+                <h2 className="text-cyan-400 text-base sm:text-lg font-bold mb-3 sm:mb-4">Features</h2>
+                <ul className="space-y-2 sm:space-y-3">
                   {game.features.map((feature, idx) => (
                     <li
                       key={idx}
-                      className="flex items-center gap-3 p-3 bg-black/40 rounded-xl border-2 border-cyan-500/20"
+                      className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-black/40 rounded-lg sm:rounded-xl border-2 border-cyan-500/20"
                     >
-                      <div className="w-2 h-2 bg-cyan-400 rounded-full flex-shrink-0" />
-                      <span className="text-gray-300">{feature}</span>
+                      <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-cyan-400 rounded-full flex-shrink-0" />
+                      <span className="text-gray-300 text-sm sm:text-base">{feature}</span>
                     </li>
                   ))}
                 </ul>
