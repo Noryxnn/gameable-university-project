@@ -79,9 +79,9 @@ describe("Games Routes - Filter Integration Tests", () => {
       await mongoose.connect(testDbUri, {
         serverSelectionTimeoutMS: 10000,
       });
-      console.log("✅ Connected to test database");
+      console.log("[SUCCESS] Connected to test database");
     } catch (error) {
-      console.error("❌ Failed to connect to test database:", error.message);
+      console.error("[ERROR] Failed to connect to test database:", error.message);
       throw error;
     }
 
@@ -97,17 +97,17 @@ describe("Games Routes - Filter Integration Tests", () => {
       await Game.deleteMany({
         title: { $in: testGamesData.map((g) => g.title) },
       });
-      console.log("✅ Cleaned up test games");
+      console.log("[SUCCESS] Cleaned up test games");
     } catch (error) {
-      console.error("⚠️ Error cleaning up test games:", error.message);
+      console.error("[WARN] Error cleaning up test games:", error.message);
     }
 
     // Close database connection
     try {
       await mongoose.connection.close();
-      console.log("✅ Closed database connection");
+      console.log("[SUCCESS] Closed database connection");
     } catch (error) {
-      console.error("⚠️ Error closing database connection:", error.message);
+      console.error("[WARN] Error closing database connection:", error.message);
     }
   });
 

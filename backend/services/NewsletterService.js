@@ -38,7 +38,7 @@ class NewsletterService {
           <tr>
             <td style="background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%); padding: 30px 20px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold; letter-spacing: 1px;">
-                🎮 GameAble
+                GameAble
               </h1>
             </td>
           </tr>
@@ -58,7 +58,7 @@ class NewsletterService {
               <!-- Game Title Highlight -->
               <div style="background-color: #f9fafb; border-left: 4px solid #9333ea; padding: 20px; margin: 25px 0; border-radius: 4px;">
                 <p style="margin: 0; color: #9333ea; font-size: 24px; font-weight: bold; line-height: 1.4;">
-                  🎮 ${gameTitle}
+                  ${gameTitle}
                 </p>
               </div>
               
@@ -91,7 +91,7 @@ class NewsletterService {
                 <tr>
                   <td align="center" style="padding: 0 0 15px 0;">
                     <p style="margin: 0; color: #9333ea; font-size: 18px; font-weight: bold;">
-                      — GameAble Team
+                      -- GameAble Team
                     </p>
                   </td>
                 </tr>
@@ -131,7 +131,7 @@ class NewsletterService {
 
     // Check if email service is configured
     if (!emailService.isConfigured()) {
-      console.warn('⚠️  Email service is not configured. Newsletter emails will not be sent.');
+      console.warn('[WARN] Email service is not configured. Newsletter emails will not be sent.');
       return { sent: 0, failed: 0 };
     }
 
@@ -143,11 +143,11 @@ class NewsletterService {
       }).select('email username');
 
       if (optedInUsers.length === 0) {
-        console.log('ℹ️  No users have opted in to newsletters. Skipping email send.');
+        console.log('[INFO] No users have opted in to newsletters. Skipping email send.');
         return { sent: 0, failed: 0 };
       }
 
-      console.log(`📧 Sending newsletter to ${optedInUsers.length} users about: ${game.title}`);
+      console.log(`[EMAIL] Sending newsletter to ${optedInUsers.length} users about: ${game.title}`);
 
       // Generate game link
       const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -173,14 +173,14 @@ class NewsletterService {
 
 We've just added a new game to our catalogue:
 
-🎮 ${game.title}
+${game.title}
 
 Click below to see more details:
 ${gameLink}
 
 Thank you for being part of our community!
 
-— GameAble Team
+-- GameAble Team
 
 If you no longer want to receive updates, you can turn off newsletters in your profile: ${frontendUrl}/profile`;
 
@@ -193,15 +193,15 @@ If you no longer want to receive updates, you can turn off newsletters in your p
 
           sent++;
         } catch (error) {
-          console.error(`❌ Failed to send newsletter email to ${user.email}:`, error.message);
+          console.error(`[ERROR] Failed to send newsletter email to ${user.email}:`, error.message);
           failed++;
         }
       }
 
-      console.log(`✅ Newsletter sending complete: ${sent} sent, ${failed} failed`);
+      console.log(`[SUCCESS] Newsletter sending complete: ${sent} sent, ${failed} failed`);
       return { sent, failed };
     } catch (error) {
-      console.error('❌ Error in sendNewGameAnnouncement:', error);
+      console.error('[ERROR] Error in sendNewGameAnnouncement:', error);
       throw new Error(`Failed to send newsletter: ${error.message}`);
     }
   }

@@ -51,3 +51,22 @@ export const SORT_OPTIONS = {
   RELEASE_YEAR_DESC: "releaseYear-desc",
 };
 
+/**
+ * All available accessibility features.
+ * This is the source of truth for accessibility options.
+ */
+export const ALL_ACCESSIBILITY_FEATURES = [
+  "Full Captions",
+  "Subtitles",
+  "Screen Reader",
+  "Colorblind",
+  "Large Target Inputs",
+  "One-Handed",
+  "Voice Control",
+  "Custom Controls",
+  "Hearing",
+  "Visual",
+  "Dexterity",
+  "Cognitive",
+].sort();
+

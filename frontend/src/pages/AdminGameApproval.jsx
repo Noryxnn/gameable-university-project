@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { FaSave, FaTimes, FaCheck, FaYoutube } from "react-icons/fa";
+import { ALL_ACCESSIBILITY_FEATURES } from "../utils/gameConstants";
 
 const AdminGameApproval = ({ user }) => {
   const { requestId } = useParams();
@@ -207,14 +208,6 @@ const AdminGameApproval = ({ user }) => {
     );
   }
 
-  const accessibilityOptions = [
-    "Hearing Accessibility",
-    "Dexterity / Motor Accessibility",
-    "Vision / Low-Vision Accessibility",
-    "Cognitive Accessibility",
-    "General Assistive Features",
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900">
       <div className="container mx-auto px-4 py-8">
@@ -227,7 +220,7 @@ const AdminGameApproval = ({ user }) => {
             Back to Requests
           </button>
           <h1 className="text-4xl font-black mb-2 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-            🎮 Approve & Add Game
+            Approve & Add Game
           </h1>
           <p className="text-white/70">Review and add game details before publishing</p>
         </div>
@@ -425,18 +418,18 @@ const AdminGameApproval = ({ user }) => {
                 Accessibility Features
               </label>
               <div className="flex flex-wrap gap-2">
-                {accessibilityOptions.map((option) => (
+                {ALL_ACCESSIBILITY_FEATURES.map((feature) => (
                   <button
-                    key={option}
+                    key={feature}
                     type="button"
-                    onClick={() => handleAccessibilityToggle(option)}
+                    onClick={() => handleAccessibilityToggle(feature)}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      formData.accessibilityFeatures.includes(option)
+                      formData.accessibilityFeatures.includes(feature)
                         ? "bg-cyan-500/20 border border-cyan-400 text-cyan-300"
                         : "bg-purple-900/40 border border-purple-700 text-white/60 hover:border-cyan-500/50"
                     }`}
                   >
-                    {option}
+                    {feature}
                   </button>
                 ))}
               </div>

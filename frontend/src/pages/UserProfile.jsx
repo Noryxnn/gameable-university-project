@@ -171,7 +171,7 @@ const UserProfile = ({ user: currentUser }) => {
   };
 
   const handleDeleteUser = async () => {
-    if (!window.confirm(`⚠️ WARNING: Are you sure you want to PERMANENTLY DELETE ${userProfile.username}? This action cannot be undone and will delete all their data, reviews, and favorites.`)) {
+    if (!window.confirm(`WARNING: Are you sure you want to PERMANENTLY DELETE ${userProfile.username}? This action cannot be undone and will delete all their data, reviews, and favorites.`)) {
       return;
     }
 

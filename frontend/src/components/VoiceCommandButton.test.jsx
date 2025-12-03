@@ -262,14 +262,14 @@ describe("VoiceCommandHelpModal Component", () => {
     it("should render all command categories", () => {
       render(<VoiceCommandHelpModal {...defaultProps} />);
 
-      expect(screen.getByText("🧭 Navigation")).toBeInTheDocument();
-      expect(screen.getByText("🔍 Search")).toBeInTheDocument();
-      expect(screen.getByText("🎯 Filters")).toBeInTheDocument();
-      expect(screen.getByText("📊 Sorting")).toBeInTheDocument();
-      expect(screen.getByText("⭐ Reviews")).toBeInTheDocument();
-      expect(screen.getByText("❤️ Favorites")).toBeInTheDocument();
-      expect(screen.getByText("🎮 Games")).toBeInTheDocument();
-      expect(screen.getByText("⚙️ Other")).toBeInTheDocument();
+      expect(screen.getByText("Navigation")).toBeInTheDocument();
+      expect(screen.getByText("Search")).toBeInTheDocument();
+      expect(screen.getByText("Filters")).toBeInTheDocument();
+      expect(screen.getByText("Sorting")).toBeInTheDocument();
+      expect(screen.getByText("Reviews")).toBeInTheDocument();
+      expect(screen.getByText("Favorites")).toBeInTheDocument();
+      expect(screen.getByText("Games")).toBeInTheDocument();
+      expect(screen.getByText("Other")).toBeInTheDocument();
     });
 
     it("should render example commands", () => {
@@ -284,7 +284,7 @@ describe("VoiceCommandHelpModal Component", () => {
     it("should render tips section", () => {
       render(<VoiceCommandHelpModal {...defaultProps} />);
 
-      expect(screen.getByText("💡 Tips")).toBeInTheDocument();
+      expect(screen.getByText("Tips")).toBeInTheDocument();
     });
   });
 
