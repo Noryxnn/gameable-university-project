@@ -11,7 +11,7 @@ const AdminRequests = ({ user }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || !user.isAdmin) {
+    if (!user || (!user.isAdmin && !user.isCoAdmin)) {
       navigate("/home");
       return;
     }

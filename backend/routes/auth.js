@@ -3,7 +3,7 @@ import passport from "passport";
 import { googleOAuthEnabled } from "../config/passport.js";
 import User from "../models/User.js";
 import Game from "../models/Game.js";
-import { protect, admin } from "../middleware/auth.js";
+import { protect, admin, mainAdmin } from "../middleware/auth.js";
 import jwt from "jsonwebtoken";
 import upload from "../middleware/upload.js";
 import path from "path";
@@ -60,6 +60,7 @@ router.post("/register", async (req, res) => {
       username: user.username,
       email: user.email,
       isAdmin: user.isAdmin || false,
+      isCoAdmin: user.isCoAdmin || false,
       token,
     });
   } catch (err) {
@@ -102,6 +103,7 @@ router.post("/login", async (req, res) => {
       username: user.username,
       email: user.email,
       isAdmin: user.isAdmin || false,
+      isCoAdmin: user.isCoAdmin || false,
       token,
     });
   } catch (err) {
@@ -139,7 +141,7 @@ router.get(
       // Generate JWT token
       const token = generateToken(user._id);
 
-      // Redirect to frontend with token
+      // Redirect to frontend with token (GoogleCallback will fetch full user data from /me endpoint)
       const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
       res.redirect(`${frontendUrl}/auth/google/callback?token=${token}`);
     } catch (err) {
@@ -305,7 +307,7 @@ router.get("/all", protect, admin, async (req, res) => {
   try {
     const users = await User.find({})
       .select("-password")
-      .select("username email bio profilePicture favoriteGames isAdmin isBanned createdAt")
+      .select("username email bio profilePicture favoriteGames isAdmin isCoAdmin isBanned createdAt")
       .sort({ createdAt: -1 });
 
     res.status(200).json({ users });
@@ -320,11 +322,11 @@ router.get("/search", protect, async (req, res) => {
   try {
     const { q } = req.query;
     
-    // If admin and empty query, return all users
-    if (req.user.isAdmin && (!q || q.trim() === "")) {
+    // If admin/co-admin and empty query, return all users
+    if ((req.user.isAdmin || req.user.isCoAdmin) && (!q || q.trim() === "")) {
       const users = await User.find({})
         .select("-password")
-        .select("username email bio profilePicture favoriteGames isAdmin isBanned createdAt")
+        .select("username email bio profilePicture favoriteGames isAdmin isCoAdmin isBanned createdAt")
         .sort({ createdAt: -1 })
         .limit(100);
       return res.status(200).json({ users });
@@ -341,7 +343,7 @@ router.get("/search", protect, async (req, res) => {
       ],
       _id: { $ne: req.user._id }
     })
-    .select("username email bio profilePicture favoriteGames isAdmin isBanned createdAt")
+    .select("username email bio profilePicture favoriteGames isAdmin isCoAdmin isBanned createdAt")
     .limit(100);
 
     res.status(200).json({ users });
@@ -795,9 +797,9 @@ router.put("/:userId/ban", protect, admin, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Prevent banning admins
-    if (targetUser.isAdmin) {
-      return res.status(400).json({ message: "Cannot ban admin users" });
+    // Prevent banning admins and co-admins
+    if (targetUser.isAdmin || targetUser.isCoAdmin) {
+      return res.status(400).json({ message: "Cannot ban admin or co-admin users" });
     }
 
     // Prevent banning yourself
@@ -850,6 +852,103 @@ router.put("/:userId/unban", protect, admin, async (req, res) => {
   }
 });
 
+// PUT /api/users/:userId/promote - Promote a user to co-admin (main admin only)
+router.put("/:userId/promote", protect, mainAdmin, async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.userId);
+    
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Prevent promoting yourself
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: "You are already the main admin" });
+    }
+
+    // Prevent promoting the main admin
+    if (targetUser.email === "admin@admin.com" && targetUser.isAdmin) {
+      return res.status(400).json({ message: "Cannot promote the main admin" });
+    }
+
+    // Check if user is already a co-admin
+    if (targetUser.isCoAdmin) {
+      return res.status(400).json({ message: "User is already a co-admin" });
+    }
+
+    // Ensure user is not set as main admin (only admin@admin.com should be main admin)
+    if (targetUser.isAdmin && targetUser.email !== "admin@admin.com") {
+      targetUser.isAdmin = false;
+    }
+
+    targetUser.isCoAdmin = true;
+    await targetUser.save();
+
+    res.status(200).json({ 
+      message: "User promoted to co-admin successfully",
+      user: {
+        _id: targetUser._id,
+        username: targetUser.username,
+        email: targetUser.email,
+        isCoAdmin: targetUser.isCoAdmin
+      }
+    });
+  } catch (err) {
+    console.error("Promote user error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// PUT /api/users/:userId/unpromote - Unpromote a co-admin (main admin only)
+router.put("/:userId/unpromote", protect, mainAdmin, async (req, res) => {
+  try {
+    const targetUser = await User.findById(req.params.userId);
+    
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Prevent unpromoting yourself
+    if (targetUser._id.toString() === req.user._id.toString()) {
+      return res.status(400).json({ message: "Cannot unpromote yourself" });
+    }
+
+    // Prevent unpromoting the main admin
+    if (targetUser.email === "admin@admin.com" && targetUser.isAdmin) {
+      return res.status(400).json({ message: "Cannot unpromote the main admin" });
+    }
+
+    // Check if user is a co-admin
+    if (!targetUser.isCoAdmin) {
+      return res.status(400).json({ message: "User is not a co-admin" });
+    }
+
+    // Clear co-admin status
+    targetUser.isCoAdmin = false;
+    
+    // If user has isAdmin set but is not the main admin, clear it
+    // (only admin@admin.com should have isAdmin = true)
+    if (targetUser.isAdmin && targetUser.email !== "admin@admin.com") {
+      targetUser.isAdmin = false;
+    }
+    
+    await targetUser.save();
+
+    res.status(200).json({ 
+      message: "User unpromoted successfully",
+      user: {
+        _id: targetUser._id,
+        username: targetUser.username,
+        email: targetUser.email,
+        isCoAdmin: targetUser.isCoAdmin
+      }
+    });
+  } catch (err) {
+    console.error("Unpromote user error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 // DELETE /api/users/:userId - Delete a user (admin only)
 router.delete("/:userId", protect, admin, async (req, res) => {
   try {
@@ -859,9 +958,9 @@ router.delete("/:userId", protect, admin, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Prevent deleting admins
-    if (targetUser.isAdmin) {
-      return res.status(400).json({ message: "Cannot delete admin users" });
+    // Prevent deleting admins and co-admins
+    if (targetUser.isAdmin || targetUser.isCoAdmin) {
+      return res.status(400).json({ message: "Cannot delete admin or co-admin users" });
     }
 
     // Prevent deleting yourself

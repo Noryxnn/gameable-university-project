@@ -285,7 +285,7 @@ const Navbar = ({
                   <FaPlusCircle className="w-5 h-5" />
                   <span>Request</span>
                 </button>
-                {user?.isAdmin && (
+                {(user?.isAdmin || user?.isCoAdmin) && (
                   <button
                     onClick={() => navigate("/admin")}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
@@ -503,7 +503,7 @@ const Navbar = ({
                       <FaPlusCircle className="w-5 h-5" />
                       <span>Request</span>
                     </button>
-                    {user?.isAdmin && (
+                    {(user?.isAdmin || user?.isCoAdmin) && (
                       <button
                         onClick={() => handleNavigation("/admin")}
                         className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${

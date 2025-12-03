@@ -145,7 +145,7 @@ const UserProfile = ({ user: currentUser }) => {
   }
 
   const isOwnProfile = currentUser && currentUser._id === userProfile._id;
-  const isAdmin = currentUser && currentUser.isAdmin;
+  const isAdmin = currentUser && (currentUser.isAdmin || currentUser.isCoAdmin);
 
   const handleBanUser = async () => {
     if (!window.confirm(`Are you sure you want to ${userProfile.isBanned ? 'unban' : 'ban'} ${userProfile.username}?`)) {

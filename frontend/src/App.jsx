@@ -186,15 +186,15 @@ function App() {
         />
         <Route
           path="/admin"
-          element={user?.isAdmin ? <AdminDashboard user={user} /> : <Navigate to="/home" />}
+          element={(user?.isAdmin || user?.isCoAdmin) ? <AdminDashboard user={user} /> : <Navigate to="/home" />}
         />
         <Route
           path="/admin/requests"
-          element={user?.isAdmin ? <AdminRequests user={user} /> : <Navigate to="/home" />}
+          element={(user?.isAdmin || user?.isCoAdmin) ? <AdminRequests user={user} /> : <Navigate to="/home" />}
         />
         <Route
           path="/admin/approve-game/:requestId"
-          element={user?.isAdmin ? <AdminGameApproval user={user} /> : <Navigate to="/home" />}
+          element={(user?.isAdmin || user?.isCoAdmin) ? <AdminGameApproval user={user} /> : <Navigate to="/home" />}
         />
         <Route path="*" element={<NotFound />} />
       </Routes>
