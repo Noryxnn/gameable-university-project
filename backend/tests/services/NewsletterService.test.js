@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from "vitest";
 import mongoose from "mongoose";
+import dotenv from "dotenv";
 import User from "../../../models/User.js";
 import newsletterService from "../../../services/NewsletterService.js";
 import emailService from "../../../services/EmailService.js";
+
+// Load environment variables
+dotenv.config();
 
 // Mock EmailService
 vi.mock("../../../services/EmailService.js", () => {
@@ -16,6 +20,37 @@ vi.mock("../../../services/EmailService.js", () => {
 
 describe("NewsletterService", () => {
   let testUsers = [];
+
+  beforeAll(async () => {
+    // Connect to test database
+    const testDbUri = process.env.TEST_MONGO_URI || process.env.MONGO_URI;
+    
+    if (!testDbUri) {
+      throw new Error(
+        "TEST_MONGO_URI or MONGO_URI must be set in environment variables for integration tests"
+      );
+    }
+
+    try {
+      await mongoose.connect(testDbUri, {
+        serverSelectionTimeoutMS: 10000,
+      });
+      console.log("✅ Connected to test database");
+    } catch (error) {
+      console.error("❌ Failed to connect to test database:", error.message);
+      throw error;
+    }
+  });
+
+  afterAll(async () => {
+    // Close database connection
+    try {
+      await mongoose.connection.close();
+      console.log("✅ Closed database connection");
+    } catch (error) {
+      console.error("⚠️ Error closing database connection:", error.message);
+    }
+  });
 
   beforeEach(async () => {
     // Clean up test users

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import request from "supertest";
 import express from "express";
 import mongoose from "mongoose";
@@ -35,6 +35,37 @@ describe("Newsletter Feature - Integration Tests", () => {
   let app;
   let testUsers = [];
   let authToken;
+
+  beforeAll(async () => {
+    // Connect to test database
+    const testDbUri = process.env.TEST_MONGO_URI || process.env.MONGO_URI;
+    
+    if (!testDbUri) {
+      throw new Error(
+        "TEST_MONGO_URI or MONGO_URI must be set in environment variables for integration tests"
+      );
+    }
+
+    try {
+      await mongoose.connect(testDbUri, {
+        serverSelectionTimeoutMS: 10000,
+      });
+      console.log("✅ Connected to test database");
+    } catch (error) {
+      console.error("❌ Failed to connect to test database:", error.message);
+      throw error;
+    }
+  });
+
+  afterAll(async () => {
+    // Close database connection
+    try {
+      await mongoose.connection.close();
+      console.log("✅ Closed database connection");
+    } catch (error) {
+      console.error("⚠️ Error closing database connection:", error.message);
+    }
+  });
 
   beforeEach(async () => {
     // Clean up test data
