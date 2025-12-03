@@ -59,8 +59,8 @@ describe("NewsletterService", () => {
     // Reset mocks to default behavior - use resetAllMocks to keep mock functions intact
     vi.resetAllMocks();
     // Restore default mock implementations
-    vi.mocked(emailService.send).mockResolvedValue(undefined);
-    vi.mocked(emailService.isConfigured).mockReturnValue(true);
+    emailService.send.mockResolvedValue(undefined);
+    emailService.isConfigured.mockReturnValue(true);
   });
 
   describe("sendNewGameAnnouncement", () => {
