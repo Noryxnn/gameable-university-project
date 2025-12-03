@@ -9,12 +9,17 @@ const Register = ({ setUser }) => {
     email: "",
     password: "",
     confirmPassword: "",
+    newsletterOptIn: false,
   });
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setFormData({ 
+      ...formData, 
+      [name]: type === 'checkbox' ? checked : value 
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -110,6 +115,18 @@ const Register = ({ setUser }) => {
               placeholder="Confirm your password"
               required
             />
+          </div>
+          <div className="mb-6">
+            <label className="flex items-center gap-2 text-purple-200 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                name="newsletterOptIn"
+                checked={formData.newsletterOptIn}
+                onChange={handleChange}
+                className="w-4 h-4 text-pink-500 bg-purple-900/50 border-purple-700 rounded focus:ring-2 focus:ring-purple-500"
+              />
+              <span>Receive news and offers about new games</span>
+            </label>
           </div>
           <button className="w-full bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-md font-medium cursor-pointer transition-colors">
             Register

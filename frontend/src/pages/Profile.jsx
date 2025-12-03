@@ -10,6 +10,7 @@ const Profile = ({ user, setUser }) => {
     email: "",
     bio: "",
     profilePicture: "",
+    newsletterOptIn: false,
     gamingPlatforms: {
       steam: "",
       xboxLive: "",
@@ -38,6 +39,7 @@ const Profile = ({ user, setUser }) => {
         email: res.data.email || "",
         bio: res.data.bio || "",
         profilePicture: profilePic,
+        newsletterOptIn: res.data.newsletterOptIn || false,
         gamingPlatforms: {
           steam: res.data.gamingPlatforms?.steam || "",
           xboxLive: res.data.gamingPlatforms?.xboxLive || "",
@@ -63,7 +65,7 @@ const Profile = ({ user, setUser }) => {
   }, [fetchProfile]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     if (name.startsWith("platform_")) {
       const platformKey = name.replace("platform_", "");
       setProfileData({
@@ -76,7 +78,7 @@ const Profile = ({ user, setUser }) => {
     } else {
       setProfileData({
         ...profileData,
-        [name]: value
+        [name]: type === 'checkbox' ? checked : value
       });
     }
   };
@@ -109,6 +111,7 @@ const Profile = ({ user, setUser }) => {
         gamingPlatforms: profileData.gamingPlatforms || {}
       });
       
+      // Update profile
       const res = await axios.put(
         "/api/users/profile",
         {
@@ -124,6 +127,25 @@ const Profile = ({ user, setUser }) => {
           },
         }
       );
+
+      // Update newsletter preferences separately
+      try {
+        await axios.put(
+          "/api/users/me/preferences",
+          {
+            newsletterOptIn: profileData.newsletterOptIn
+          },
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json"
+            },
+          }
+        );
+      } catch (prefErr) {
+        console.error("Error updating newsletter preferences:", prefErr);
+        // Don't fail the whole profile update if preferences fail
+      }
       setUser(res.data);
       setIsEditing(false);
       setSaving(false);
@@ -367,6 +389,29 @@ const Profile = ({ user, setUser }) => {
               ) : (
                 <p className="text-white/90 bg-black/20 p-4 rounded-lg border border-purple-500/20">
                   {profileData.bio || "No bio yet."}
+                </p>
+              )}
+            </div>
+
+            {/* Newsletter Preferences Section */}
+            <div className="mb-8">
+              <h2 className="text-white text-lg font-bold mb-3 block">Newsletter Preferences</h2>
+              <label className="flex items-center gap-3 text-white/90 cursor-pointer">
+                <input
+                  type="checkbox"
+                  name="newsletterOptIn"
+                  checked={profileData.newsletterOptIn}
+                  onChange={handleChange}
+                  disabled={!isEditing}
+                  className="w-5 h-5 text-pink-500 bg-black/40 border-2 border-purple-400/30 rounded focus:ring-2 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <span className={!isEditing ? "text-white/70" : ""}>
+                  Receive news and offers about new games
+                </span>
+              </label>
+              {!isEditing && profileData.newsletterOptIn && (
+                <p className="text-sm text-gray-400 mt-2 ml-8">
+                  You're subscribed to our newsletter
                 </p>
               )}
             </div>

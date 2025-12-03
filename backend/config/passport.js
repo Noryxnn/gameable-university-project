@@ -73,6 +73,8 @@ if (hasClientID && hasClientSecret) {
           username: uniqueUsername,
           authProvider: "google",
           profilePicture: profile.photos && profile.photos[0] ? profile.photos[0].value : "",
+          newsletterOptIn: false, // Default to false for Google OAuth signups
+          newsletterOptInUpdatedAt: null,
         });
 
         return done(null, user);

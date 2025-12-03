@@ -36,7 +36,7 @@ router.get("/test", (req, res) => {
 
 // Register
 router.post("/register", async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, newsletterOptIn } = req.body;
   try {
     if (!username || !email || !password) {
       return res.status(400).json({ message: "Please fill all the fields" });
@@ -53,7 +53,18 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = await User.create({ username, email, password, authProvider: "local" });
+    // Handle newsletterOptIn: default to false if not provided, validate boolean
+    const optIn = newsletterOptIn === true || newsletterOptIn === 'true';
+    const userData = {
+      username,
+      email,
+      password,
+      authProvider: "local",
+      newsletterOptIn: optIn,
+      newsletterOptInUpdatedAt: optIn ? new Date() : null
+    };
+
+    const user = await User.create(userData);
     const token = generateToken(user._id);
     res.status(201).json({
       id: user._id,
@@ -178,6 +189,39 @@ router.get("/me", protect, async (req, res) => {
   } catch (err) {
     console.error("Error in /me route:", err);
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update user preferences (newsletter opt-in)
+router.put("/me/preferences", protect, async (req, res) => {
+  try {
+    const { newsletterOptIn } = req.body;
+    
+    // Validate newsletterOptIn is a boolean
+    if (typeof newsletterOptIn !== 'boolean') {
+      return res.status(400).json({ message: "newsletterOptIn must be a boolean value" });
+    }
+    
+    const user = await User.findById(req.user._id);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Update newsletter preference
+    user.newsletterOptIn = newsletterOptIn;
+    user.newsletterOptInUpdatedAt = new Date();
+    
+    await user.save();
+    
+    res.status(200).json({
+      message: "Preferences updated successfully",
+      newsletterOptIn: user.newsletterOptIn,
+      newsletterOptInUpdatedAt: user.newsletterOptInUpdatedAt
+    });
+  } catch (err) {
+    console.error("Update preferences error:", err);
+    res.status(500).json({ message: err.message || "Server error" });
   }
 });
 
