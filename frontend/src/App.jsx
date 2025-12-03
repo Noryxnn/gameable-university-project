@@ -25,10 +25,18 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import NotFound from "./components/NotFound";
 import useGameSearch from "./hooks/useGameSearch";
+import { VoiceCommandProvider } from "./context/VoiceCommandContext";
+import { SORT_OPTIONS, RATING_FILTERS } from "./utils/gameConstants";
 
 function App() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Filter state (lifted up for voice commands)
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [selectedAccessibilityFeatures, setSelectedAccessibilityFeatures] = useState([]);
+  const [selectedRating, setSelectedRating] = useState(RATING_FILTERS.ALL);
+  const [selectedSort, setSelectedSort] = useState(SORT_OPTIONS.DEFAULT);
   
   // Game search hook
   const {
@@ -43,6 +51,27 @@ function App() {
     suggestions,
     clearSearch,
   } = useGameSearch();
+  
+  // Derive available genres from all games
+  const availableGenres = allGames?.reduce((genres, game) => {
+    if (game.genre) {
+      game.genre.split(',').forEach(g => {
+        const trimmed = g.trim();
+        if (trimmed && !genres.includes(trimmed)) {
+          genres.push(trimmed);
+        }
+      });
+    }
+    return genres;
+  }, []) || [];
+  
+  // Clear filters handler
+  const handleClearFilters = () => {
+    setSelectedGenres([]);
+    setSelectedAccessibilityFeatures([]);
+    setSelectedRating(RATING_FILTERS.ALL);
+    setSelectedSort(SORT_OPTIONS.DEFAULT);
+  };
   
   // Axios interceptor to handle banned users globally
   useEffect(() => {
@@ -237,90 +266,115 @@ function App() {
 
   return (
     <Router>
-      <Navbar 
-        user={user} 
+      <VoiceCommandProvider
+        user={user}
         setUser={setUser}
-        searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        suggestions={suggestions}
         clearSearch={clearSearch}
         commitSearch={commitSearch}
-      />
-      <Routes>
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route 
-          path="/home" 
-          element={
-            <Home 
-              user={user} 
-              allGames={allGames}
-              filteredGames={filteredGames}
-              gamesLoading={gamesLoading}
-              gamesError={gamesError}
-              activeSearch={activeSearch}
-              clearSearch={clearSearch}
-            />
-          } 
+        setSelectedGenres={setSelectedGenres}
+        setSelectedAccessibilityFeatures={setSelectedAccessibilityFeatures}
+        setSelectedRating={setSelectedRating}
+        setSelectedSort={setSelectedSort}
+        handleClearFilters={handleClearFilters}
+        filteredGames={filteredGames}
+        allGames={allGames}
+        availableGenres={availableGenres}
+      >
+        <Navbar 
+          user={user} 
+          setUser={setUser}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          suggestions={suggestions}
+          clearSearch={clearSearch}
+          commitSearch={commitSearch}
         />
-        <Route path="/game/:id" element={<GameDetail user={user} />} />
-        <Route
-          path="/login"
-          element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
-        />
-        <Route
-          path="/register"
-          element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
-        />
-        <Route
-          path="/forgot-password"
-          element={user ? <Navigate to="/home" /> : <ForgotPassword />}
-        />
-        <Route
-          path="/reset-password/:token"
-          element={user ? <Navigate to="/home" /> : <ResetPassword />}
-        />
-        <Route
-          path="/auth/google/callback"
-          element={<GoogleCallback setUser={setUser} />}
-        />
-        <Route
-          path="/profile"
-          element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/settings"
-          element={user ? <Settings user={user} /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/request-game"
-          element={user ? <RequestGame user={user} /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/social"
-          element={user ? <Social user={user} /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/user/:userId"
-          element={user ? <UserProfile user={user} /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/favorites"
-          element={user ? <Favorites user={user} /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/admin"
-          element={user?.isAdmin ? <AdminDashboard user={user} /> : <Navigate to="/home" />}
-        />
-        <Route
-          path="/admin/requests"
-          element={user?.isAdmin ? <AdminRequests user={user} /> : <Navigate to="/home" />}
-        />
-        <Route
-          path="/admin/approve-game/:requestId"
-          element={user?.isAdmin ? <AdminGameApproval user={user} /> : <Navigate to="/home" />}
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route 
+            path="/home" 
+            element={
+              <Home 
+                user={user} 
+                allGames={allGames}
+                filteredGames={filteredGames}
+                gamesLoading={gamesLoading}
+                gamesError={gamesError}
+                activeSearch={activeSearch}
+                clearSearch={clearSearch}
+                selectedGenres={selectedGenres}
+                setSelectedGenres={setSelectedGenres}
+                selectedAccessibilityFeatures={selectedAccessibilityFeatures}
+                setSelectedAccessibilityFeatures={setSelectedAccessibilityFeatures}
+                selectedRating={selectedRating}
+                setSelectedRating={setSelectedRating}
+                selectedSort={selectedSort}
+                setSelectedSort={setSelectedSort}
+                handleClearFilters={handleClearFilters}
+              />
+            } 
+          />
+          <Route path="/game/:id" element={<GameDetail user={user} />} />
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
+          />
+          <Route
+            path="/register"
+            element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
+          />
+          <Route
+            path="/forgot-password"
+            element={user ? <Navigate to="/home" /> : <ForgotPassword />}
+          />
+          <Route
+            path="/reset-password/:token"
+            element={user ? <Navigate to="/home" /> : <ResetPassword />}
+          />
+          <Route
+            path="/auth/google/callback"
+            element={<GoogleCallback setUser={setUser} />}
+          />
+          <Route
+            path="/profile"
+            element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/settings"
+            element={user ? <Settings user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/request-game"
+            element={user ? <RequestGame user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/social"
+            element={user ? <Social user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/user/:userId"
+            element={user ? <UserProfile user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/favorites"
+            element={user ? <Favorites user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin"
+            element={user?.isAdmin ? <AdminDashboard user={user} /> : <Navigate to="/home" />}
+          />
+          <Route
+            path="/admin/requests"
+            element={user?.isAdmin ? <AdminRequests user={user} /> : <Navigate to="/home" />}
+          />
+          <Route
+            path="/admin/approve-game/:requestId"
+            element={user?.isAdmin ? <AdminGameApproval user={user} /> : <Navigate to="/home" />}
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </VoiceCommandProvider>
     </Router>
   );
 }
