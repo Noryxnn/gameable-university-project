@@ -16,12 +16,12 @@ const hasClientSecret = !!process.env.GOOGLE_CLIENT_SECRET;
 // Only initialize Google OAuth strategy if credentials are configured
 if (hasClientID && hasClientSecret) {
   googleOAuthEnabled = true;
-  console.log("✅ Google OAuth enabled successfully");
+  console.log(" Google OAuth enabled successfully");
   // Ensure callback URL is absolute
   const callbackURL = process.env.GOOGLE_CALLBACK_URL || 
     `${process.env.BACKEND_URL || "http://localhost:5050"}/api/users/auth/google/callback`;
   
-  console.log(`🔗 Google OAuth Callback URL: ${callbackURL}`);
+  console.log(`Google OAuth Callback URL: ${callbackURL}`);
   
   passport.use(
     new GoogleStrategy(
@@ -73,6 +73,8 @@ if (hasClientID && hasClientSecret) {
           username: uniqueUsername,
           authProvider: "google",
           profilePicture: profile.photos && profile.photos[0] ? profile.photos[0].value : "",
+          newsletterOptIn: false, // Default to false for Google OAuth signups
+          newsletterOptInUpdatedAt: null,
         });
 
         return done(null, user);
@@ -84,10 +86,10 @@ if (hasClientID && hasClientSecret) {
     )
   );
 } else {
-  console.warn("⚠️  Google OAuth credentials not configured. Google login will be disabled.");
-  console.warn("   To enable, set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file");
-  console.warn(`   GOOGLE_CLIENT_ID: ${hasClientID ? "✅ Set" : "❌ Missing"}`);
-  console.warn(`   GOOGLE_CLIENT_SECRET: ${hasClientSecret ? "✅ Set" : "❌ Missing"}`);
+  console.warn(" Google OAuth credentials not configured. Google login will be disabled.");
+  console.warn("To enable, set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in your .env file");
+  console.warn(`GOOGLE_CLIENT_ID: ${hasClientID ? "Set" : "Missing"}`);
+  console.warn(`GOOGLE_CLIENT_SECRET: ${hasClientSecret ? "Set" : "Missing"}`);
 }
 
 // Serialize user for session

@@ -29,7 +29,9 @@ const userSchema = new mongoose.Schema({
     friendRequestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     friendRequestsReceived: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     resetPasswordToken: { type: String },
-    resetPasswordExpire: { type: Date }
+    resetPasswordExpire: { type: Date },
+    newsletterOptIn: { type: Boolean, default: false },
+    newsletterOptInUpdatedAt: { type: Date }
 },{ timestamps: true }); 
 
 // Initialize gamingPlatforms if it doesn't exist
@@ -89,7 +91,7 @@ userSchema.methods.getResetPasswordToken = function() {
     return resetToken;
 }
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 export default User;
     

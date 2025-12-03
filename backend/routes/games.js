@@ -2,6 +2,7 @@ import express from 'express';
 import Game from '../models/Game.js';
 import { protect, admin } from '../middleware/auth.js';
 import { buildGameFilterQuery, parseFilterParam } from '../utils/gameFilters.js';
+import newsletterService from '../services/NewsletterService.js';
 
 const router = express.Router();
 
@@ -72,6 +73,11 @@ router.post('/', protect, admin, async (req, res) => {
             accessibilityFeatures: accessibilityFeatures || [],
             features: features || [],
             downloadLink: downloadLink || null
+        });
+
+        // Send newsletter to opted-in users (fire and forget - don't block response)
+        newsletterService.sendNewGameAnnouncement(game).catch(err => {
+            console.error('Newsletter sending failed (non-blocking):', err);
         });
 
         res.status(201).json(game);
