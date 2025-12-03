@@ -9,7 +9,8 @@ import {
   FaCheckCircle,
   FaTrash,
   FaEye,
-  FaUser
+  FaUser,
+  FaCrown
 } from "react-icons/fa";
 
 const AdminDashboard = ({ user }) => {
@@ -28,16 +29,18 @@ const AdminDashboard = ({ user }) => {
       navigate("/home");
       return;
     }
-    if (!user.isAdmin) {
+    // Allow both main admin and co-admin
+    if (!user.isAdmin && !user.isCoAdmin) {
       console.log("AdminDashboard: User is not an admin, redirecting to home", { 
         userId: user._id, 
         username: user.username, 
-        isAdmin: user.isAdmin 
+        isAdmin: user.isAdmin,
+        isCoAdmin: user.isCoAdmin
       });
       navigate("/home");
       return;
     }
-    console.log("AdminDashboard: User is admin, loading dashboard", { 
+    console.log("AdminDashboard: User is admin/co-admin, loading dashboard", { 
       userId: user._id, 
       username: user.username 
     });
@@ -138,6 +141,42 @@ const AdminDashboard = ({ user }) => {
       fetchUsers();
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete user");
+      console.error(err);
+    }
+  };
+
+  const handlePromoteUser = async (userId, username) => {
+    if (!window.confirm(`Are you sure you want to promote ${username} to co-admin?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(`/api/users/${userId}/promote`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      fetchUsers();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to promote user");
+      console.error(err);
+    }
+  };
+
+  const handleUnpromoteUser = async (userId, username) => {
+    if (!window.confirm(`Are you sure you want to unpromote ${username} from co-admin?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.put(`/api/users/${userId}/unpromote`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      fetchUsers();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to unpromote user");
       console.error(err);
     }
   };
@@ -283,6 +322,11 @@ const AdminDashboard = ({ user }) => {
                               ADMIN
                             </span>
                           )}
+                          {userItem.isCoAdmin && !userItem.isAdmin && (
+                            <span className="px-2 py-1 bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 rounded-full text-xs font-medium">
+                              CO-ADMIN
+                            </span>
+                          )}
                         </div>
                         <p className="text-white/60 text-sm">{userItem.email}</p>
                       </div>
@@ -296,7 +340,35 @@ const AdminDashboard = ({ user }) => {
                         <FaEye className="w-4 h-4" />
                         View
                       </button>
-                      {!userItem.isAdmin && (
+                      {/* Only main admin (admin@admin.com) can promote/unpromote */}
+                      {user?.email === "admin@admin.com" && (
+                        <>
+                          {/* Show promote button for regular users (not admin, not co-admin) */}
+                          {!userItem.isAdmin && !userItem.isCoAdmin && (
+                            <button
+                              onClick={() => handlePromoteUser(userItem._id, userItem.username)}
+                              className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-colors font-medium"
+                              title="Promote to Co-Admin"
+                            >
+                              <FaCrown className="w-4 h-4" />
+                              Promote to Co-Admin
+                            </button>
+                          )}
+                          {/* Show unpromote button for co-admins (even if they somehow have isAdmin set) */}
+                          {userItem.isCoAdmin && userItem.email !== "admin@admin.com" && (
+                            <button
+                              onClick={() => handleUnpromoteUser(userItem._id, userItem.username)}
+                              className="flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl transition-colors font-medium"
+                              title="Unpromote from Co-Admin"
+                            >
+                              <FaCrown className="w-4 h-4" />
+                              Unpromote
+                            </button>
+                          )}
+                        </>
+                      )}
+                      {/* Ban and Delete buttons only for regular users (not admins, not co-admins) */}
+                      {!userItem.isAdmin && !userItem.isCoAdmin && (
                         <>
                           <button
                             onClick={() => handleBanUser(userItem._id, userItem.isBanned)}

@@ -59,7 +59,7 @@ const AdminGameApproval = ({ user }) => {
   }, [requestId]);
 
   useEffect(() => {
-    if (!user || !user.isAdmin) {
+    if (!user || (!user.isAdmin && !user.isCoAdmin)) {
       navigate("/home");
       return;
     }
