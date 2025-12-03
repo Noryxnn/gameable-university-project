@@ -12,16 +12,16 @@ import newsletterService from "../../services/NewsletterService.js";
 // Load environment variables
 dotenv.config();
 
-// Mock middleware
+// Mock middleware - use vi.fn() so we can change implementation per test
 vi.mock("../../middleware/auth.js", () => ({
-  protect: (req, res, next) => {
-    // For testing, we'll set req.user manually in each test
+  protect: vi.fn((req, res, next) => {
+    // Default: just call next (no user set)
     next();
-  },
-  admin: (req, res, next) => {
-    // For testing, we'll set req.user.isAdmin manually in each test
+  }),
+  admin: vi.fn((req, res, next) => {
+    // Default: just call next
     next();
-  },
+  }),
 }));
 
 // Mock NewsletterService
@@ -72,6 +72,9 @@ describe("Newsletter Feature - Integration Tests", () => {
     await User.deleteMany({ email: { $regex: /^test.*@test\.com$/ } });
     testUsers = [];
     vi.clearAllMocks();
+    // Reset middleware mocks to default behavior
+    vi.mocked(protect).mockImplementation((req, res, next) => next());
+    vi.mocked(admin).mockImplementation((req, res, next) => next());
 
     // Setup Express app
     app = express();
@@ -152,8 +155,7 @@ describe("Newsletter Feature - Integration Tests", () => {
   describe("Preferences Endpoint", () => {
     it("should update newsletter preference to true", async () => {
       // Mock protect middleware to set req.user
-      const originalProtect = require("../../middleware/auth.js").protect;
-      vi.spyOn(require("../../middleware/auth.js"), "protect").mockImplementation((req, res, next) => {
+      vi.mocked(protect).mockImplementation((req, res, next) => {
         req.user = { _id: testUsers[0]._id };
         next();
       });
@@ -181,7 +183,7 @@ describe("Newsletter Feature - Integration Tests", () => {
       await testUsers[0].save();
 
       // Mock protect middleware
-      vi.spyOn(require("../../middleware/auth.js"), "protect").mockImplementation((req, res, next) => {
+      vi.mocked(protect).mockImplementation((req, res, next) => {
         req.user = { _id: testUsers[0]._id };
         next();
       });
@@ -202,7 +204,7 @@ describe("Newsletter Feature - Integration Tests", () => {
     });
 
     it("should reject non-boolean newsletterOptIn value", async () => {
-      vi.spyOn(require("../../middleware/auth.js"), "protect").mockImplementation((req, res, next) => {
+      vi.mocked(protect).mockImplementation((req, res, next) => {
         req.user = { _id: testUsers[0]._id };
         next();
       });
@@ -243,12 +245,12 @@ describe("Newsletter Feature - Integration Tests", () => {
       testUsers.push(adminUser);
 
       // Mock protect and admin middleware
-      vi.spyOn(require("../../middleware/auth.js"), "protect").mockImplementation((req, res, next) => {
+      vi.mocked(protect).mockImplementation((req, res, next) => {
         req.user = { _id: adminUser._id, isAdmin: true };
         next();
       });
 
-      vi.spyOn(require("../../middleware/auth.js"), "admin").mockImplementation((req, res, next) => {
+      vi.mocked(admin).mockImplementation((req, res, next) => {
         next();
       });
 
