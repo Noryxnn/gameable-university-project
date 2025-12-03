@@ -349,7 +349,7 @@ const useVoiceCommands = (options = {}) => {
             if (!isListeningRef.current && passiveRecognitionRef.current) {
               try {
                 passiveRecognitionRef.current.start();
-              } catch (err) {
+              } catch {
                 // Ignore errors when trying to restart
               }
             }
@@ -380,7 +380,7 @@ const useVoiceCommands = (options = {}) => {
           // Stop passive listening and start active listening
           try {
             passiveRecognition.stop();
-          } catch (err) {
+          } catch {
             // Ignore
           }
           
@@ -411,7 +411,7 @@ const useVoiceCommands = (options = {}) => {
     if (passiveRecognitionRef.current && isPassiveListeningRef.current) {
       try {
         passiveRecognitionRef.current.stop();
-      } catch (err) {
+      } catch {
         // Ignore errors
       }
     }
@@ -465,7 +465,7 @@ const useVoiceCommands = (options = {}) => {
     
     try {
       passiveRecognitionRef.current.stop();
-    } catch (err) {
+    } catch {
       // Ignore errors
     }
   }, []);

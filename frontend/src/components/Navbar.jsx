@@ -25,9 +25,16 @@ const Navbar = ({
   const profileDropdownRef = useRef(null);
 
   // Close menus when route changes
+  const prevPathRef = useRef(location.pathname);
   useEffect(() => {
-    setIsSearchOpen(false);
-    setIsProfileDropdownOpen(false);
+    if (prevPathRef.current !== location.pathname) {
+      prevPathRef.current = location.pathname;
+      // Use requestAnimationFrame to avoid synchronous setState in effect
+      requestAnimationFrame(() => {
+        setIsSearchOpen(false);
+        setIsProfileDropdownOpen(false);
+      });
+    }
   }, [location.pathname]);
 
   // Close profile dropdown when clicking outside
@@ -83,11 +90,6 @@ const Navbar = ({
   };
 
   const currentPage = location.pathname.replace("/", "") || "home";
-
-  const handleNavigation = (path) => {
-    navigate(path);
-    setIsProfileDropdownOpen(false);
-  };
 
   const handleHomeNavigation = () => {
     clearSearch();
