@@ -51,6 +51,7 @@ describe("NewsletterService", () => {
       testUsers = [optedInUser1, optedInUser2, optedOutUser];
 
       const game = {
+        _id: "507f1f77bcf86cd799439011",
         title: "Test Game",
         description: "A test game description",
       };
@@ -65,19 +66,20 @@ describe("NewsletterService", () => {
       expect(emailService.send).toHaveBeenCalledTimes(2);
 
       // Verify correct email content
-      expect(emailService.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: "test1@test.com",
-          subject: "New game added: Test Game",
-        })
-      );
+      const firstCall = emailService.send.mock.calls[0][0];
+      const secondCall = emailService.send.mock.calls[1][0];
 
-      expect(emailService.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          to: "test2@test.com",
-          subject: "New game added: Test Game",
-        })
-      );
+      expect(firstCall.to).toBe("test1@test.com");
+      expect(firstCall.subject).toBe("New game added: Test Game");
+      expect(firstCall.html).toContain("testuser1");
+      expect(firstCall.html).toContain("Test Game");
+      expect(firstCall.html).toContain("Check It Out");
+      expect(firstCall.html).toContain("GameAble Team");
+
+      expect(secondCall.to).toBe("test2@test.com");
+      expect(secondCall.subject).toBe("New game added: Test Game");
+      expect(secondCall.html).toContain("testuser2");
+      expect(secondCall.html).toContain("Test Game");
     });
 
     it("should not send emails if no users have opted in", async () => {
@@ -135,7 +137,7 @@ describe("NewsletterService", () => {
       expect(emailService.send).toHaveBeenCalledTimes(2);
     });
 
-    it("should include game title in email subject", async () => {
+    it("should include game title in email subject and body", async () => {
       const optedInUser = await User.create({
         username: "testuser1",
         email: "test1@test.com",
@@ -146,16 +148,18 @@ describe("NewsletterService", () => {
       testUsers = [optedInUser];
 
       const game = {
+        _id: "507f1f77bcf86cd799439011",
         title: "Amazing Game Title",
       };
 
       await newsletterService.sendNewGameAnnouncement(game);
 
-      expect(emailService.send).toHaveBeenCalledWith(
-        expect.objectContaining({
-          subject: "New game added: Amazing Game Title",
-        })
-      );
+      const callArgs = emailService.send.mock.calls[0][0];
+      expect(callArgs.subject).toBe("New game added: Amazing Game Title");
+      expect(callArgs.html).toContain("Amazing Game Title");
+      expect(callArgs.html).toContain("Check It Out");
+      expect(callArgs.html).toContain("GameAble Team");
+      expect(callArgs.html).toContain("testuser1");
     });
 
     it("should throw error if game object is invalid", async () => {
