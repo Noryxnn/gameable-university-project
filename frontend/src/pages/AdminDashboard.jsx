@@ -124,7 +124,7 @@ const AdminDashboard = ({ user }) => {
   };
 
   const handleDeleteUser = async (userId, username) => {
-    if (!window.confirm(`⚠️ WARNING: Are you sure you want to PERMANENTLY DELETE ${username}? This action cannot be undone.`)) {
+    if (!window.confirm(`WARNING: Are you sure you want to PERMANENTLY DELETE ${username}? This action cannot be undone.`)) {
       return;
     }
 
@@ -194,7 +194,7 @@ const AdminDashboard = ({ user }) => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-black mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent">
-            🛡️ Admin Dashboard
+            Admin Dashboard
           </h1>
           <p className="text-white/70">Manage users, requests, and content</p>
         </div>

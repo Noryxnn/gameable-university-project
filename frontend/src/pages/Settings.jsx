@@ -226,7 +226,7 @@ const Settings = ({ user }) => {
               {textToSpeechEnabled && (
                 <div className="mt-4 p-3 bg-purple-500/20 border border-purple-500/50 rounded-lg">
                   <p className="text-purple-300 text-sm">
-                    💡 Tip: Click on any text element to have it read aloud
+                    Tip: Click on any text element to have it read aloud
                   </p>
                 </div>
               )}

@@ -489,7 +489,7 @@ const Social = ({ user }) => {
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <FaComments className="w-12 h-12 text-purple-400/50 mb-3" />
-            <p className="text-gray-400 text-sm">No messages yet. Say hello! 👋</p>
+            <p className="text-gray-400 text-sm">No messages yet. Say hello!</p>
           </div>
         ) : (
           messages.map((msg, index) => {

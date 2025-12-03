@@ -9,14 +9,14 @@ const createAdmin = async () => {
   try {
     // Check if MONGO_URI is set
     if (!process.env.MONGO_URI) {
-      console.error('❌ MONGO_URI is not set in environment variables!');
+      console.error('[ERROR] MONGO_URI is not set in environment variables!');
       console.error('Please create a .env file in the backend directory with:');
       console.error('MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database');
       process.exit(1);
     }
 
     // Connect to database
-    console.log('🔄 Connecting to MongoDB...');
+    console.log('[INFO] Connecting to MongoDB...');
     await connectDB();
     
     // Wait a bit for connection to be ready
@@ -25,7 +25,7 @@ const createAdmin = async () => {
     const adminEmail = 'admin@admin.com';
     const adminPassword = 'As123123';
     
-    console.log('🔄 Checking for admin user...');
+    console.log('[INFO] Checking for admin user...');
     // Check if admin exists
     const existingAdmin = await User.findOne({ email: adminEmail });
     
@@ -35,7 +35,7 @@ const createAdmin = async () => {
       let username = 'admin';
       if (existingUsername && existingUsername.email !== adminEmail) {
         username = 'admin_user';
-        console.log('⚠️  Username "admin" already exists. Using "admin_user" instead...');
+        console.log('[WARN] Username "admin" already exists. Using "admin_user" instead...');
       }
       
       const admin = await User.create({
@@ -44,7 +44,7 @@ const createAdmin = async () => {
         password: adminPassword,
         isAdmin: true
       });
-      console.log('✅ Admin user created successfully!');
+      console.log('[SUCCESS] Admin user created successfully!');
       console.log(`   Username: ${username}`);
       console.log(`   Email: ${adminEmail}`);
       console.log(`   Password: ${adminPassword}`);
@@ -54,21 +54,21 @@ const createAdmin = async () => {
         existingAdmin.isAdmin = true;
         existingAdmin.password = adminPassword; // Will be hashed by pre-save hook
         await existingAdmin.save();
-        console.log('✅ Existing user updated to admin!');
+        console.log('[SUCCESS] Existing user updated to admin!');
       } else {
-        console.log('✅ Admin user already exists!');
+        console.log('[SUCCESS] Admin user already exists!');
       }
       console.log(`   Email: ${adminEmail}`);
       console.log(`   Password: ${adminPassword}`);
     }
     
     await mongoose.connection.close();
-    console.log('✅ Database connection closed.');
+    console.log('[SUCCESS] Database connection closed.');
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error creating admin user:', error.message);
+    console.error('[ERROR] Error creating admin user:', error.message);
     if (error.message.includes('MONGO_URI')) {
-      console.error('\n💡 Make sure your .env file in the backend directory contains:');
+      console.error('\n[TIP] Make sure your .env file in the backend directory contains:');
       console.error('MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/database');
     }
     process.exit(1);

@@ -44,6 +44,7 @@ const getCommandFeedback = (command) => {
 
 const VoiceCommandButton = ({ 
   isListening, 
+  isPassiveListening,
   isSupported, 
   transcript, 
   interimTranscript,
@@ -124,8 +125,8 @@ const VoiceCommandButton = ({
         </div>
       )}
 
-      {/* Floating Voice Button */}
-      <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end gap-2 sm:gap-3 safe-area-bottom">
+      {/* Floating Voice Button - positioned above mobile bottom nav on phones, normal position on tablets/desktop */}
+      <div className="fixed bottom-20 lg:bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end gap-2 sm:gap-3 safe-area-bottom">
         {/* Help Button */}
         <button
           onClick={onShowHelp}
@@ -141,20 +142,24 @@ const VoiceCommandButton = ({
           onClick={onToggle}
           disabled={!isSupported}
           className={`
-            w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center no-min-touch
+            w-14 h-14 sm:w-16 sm:h-16 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center no-min-touch relative
             ${isListening 
               ? 'bg-gradient-to-r from-red-500 to-pink-500 border-4 border-white/30 scale-110 animate-pulse shadow-red-500/50' 
               : 'bg-gradient-to-r from-purple-600 to-pink-600 border-4 border-purple-400/30 hover:scale-105 hover:shadow-purple-500/50'
             }
             ${!isSupported ? 'opacity-50 cursor-not-allowed' : ''}
           `}
-          title={isListening ? 'Stop listening' : 'Start voice command'}
+          title={isListening ? 'Stop listening (or say "toggle voice command")' : 'Start voice command (or say "toggle voice command")'}
           aria-label={isListening ? 'Stop voice command' : 'Start voice command'}
         >
           {isListening ? (
             <FaMicrophoneSlash className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           ) : (
             <FaMicrophone className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+          )}
+          {/* Passive listening indicator - small dot when passively listening */}
+          {isPassiveListening && !isListening && (
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-gray-900 animate-pulse" title="Listening for activation phrase" />
           )}
         </button>
 
@@ -166,7 +171,7 @@ const VoiceCommandButton = ({
 
       {/* Error Toast */}
       {error && (
-        <div className="fixed bottom-24 sm:bottom-28 right-4 sm:right-6 left-4 sm:left-auto z-50 animate-in fade-in slide-in-from-right-4 duration-300">
+        <div className="fixed bottom-36 lg:bottom-28 right-4 sm:right-6 left-4 sm:left-auto z-50 animate-in fade-in slide-in-from-right-4 duration-300">
           <div className="px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-red-900/90 backdrop-blur-xl border-2 border-red-500/50 text-red-100 shadow-xl max-w-xs mx-auto sm:mx-0">
             <div className="flex items-center gap-2">
               <FaMicrophoneSlash className="w-4 h-4 flex-shrink-0" />
@@ -192,7 +197,7 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
 
   const commands = [
     {
-      category: '🧭 Navigation',
+      category: 'Navigation',
       items: [
         { command: '"Go to home"', description: 'Navigate to home page' },
         { command: '"Go to profile"', description: 'Open your profile' },
@@ -203,7 +208,7 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
       ]
     },
     {
-      category: '🔍 Search',
+      category: 'Search',
       items: [
         { command: '"Search for [game name]"', description: 'Search for a game' },
         { command: '"Find [keyword]"', description: 'Search by keyword' },
@@ -211,7 +216,7 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
       ]
     },
     {
-      category: '🎯 Filters',
+      category: 'Filters',
       items: [
         { command: '"Show action games"', description: 'Filter by genre' },
         { command: '"Filter by RPG"', description: 'Filter by genre' },
@@ -222,7 +227,7 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
       ]
     },
     {
-      category: '📊 Sorting',
+      category: 'Sorting',
       items: [
         { command: '"Sort by rating"', description: 'Sort by highest rated' },
         { command: '"Sort by newest"', description: 'Sort by release date' },
@@ -230,7 +235,7 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
       ]
     },
     {
-      category: '⭐ Reviews',
+      category: 'Reviews',
       items: [
         { command: '"Rate 5 stars"', description: 'Set rating (1-5)' },
         { command: '"Rate three stars"', description: 'Works with words too' },
@@ -239,7 +244,7 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
       ]
     },
     {
-      category: '❤️ Favorites',
+      category: 'Favorites',
       items: [
         { command: '"Add to favorites"', description: 'Save current game' },
         { command: '"Remove from favorites"', description: 'Unsave game' },
@@ -247,7 +252,7 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
       ]
     },
     {
-      category: '🎮 Games',
+      category: 'Games',
       items: [
         { command: '"Open Cyberpunk 2077"', description: 'Open a game by name' },
         { command: '"Play The Witcher"', description: 'Open game page' },
@@ -255,7 +260,7 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
       ]
     },
     {
-      category: '⚙️ Other',
+      category: 'Other',
       items: [
         { command: '"Scroll to top"', description: 'Scroll to page top' },
         { command: '"Scroll to bottom"', description: 'Scroll to page bottom' },
@@ -320,14 +325,32 @@ export const VoiceCommandHelpModal = ({ isOpen, onClose }) => {
             ))}
           </div>
 
+          {/* Activation Phrases */}
+          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-green-600/20 rounded-xl border border-green-500/30">
+            <h4 className="font-bold text-green-300 mb-2 text-sm sm:text-base">Voice Activation</h4>
+            <p className="text-xs sm:text-sm text-white/70 mb-2">
+              You can activate voice commands hands-free by saying any of these phrases:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {['toggle voice command', 'hey gameable', 'activate voice', 'start listening'].map((phrase) => (
+                <code key={phrase} className="text-xs bg-green-500/20 text-green-300 px-2 py-1 rounded">
+                  "{phrase}"
+                </code>
+              ))}
+            </div>
+            <p className="text-xs text-white/50 mt-2">
+              A green dot on the microphone button indicates passive listening is active.
+            </p>
+          </div>
+
           {/* Tips */}
-          <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-purple-600/20 rounded-xl border border-purple-500/30 safe-area-bottom">
-            <h4 className="font-bold text-purple-300 mb-2 text-sm sm:text-base">💡 Tips</h4>
+          <div className="mt-4 p-3 sm:p-4 bg-purple-600/20 rounded-xl border border-purple-500/30 safe-area-bottom">
+            <h4 className="font-bold text-purple-300 mb-2 text-sm sm:text-base">Tips</h4>
             <ul className="text-xs sm:text-sm text-white/70 space-y-1">
-              <li>• Tap the microphone button or say "Stop" to stop listening</li>
-              <li>• Speak clearly and wait for the feedback to appear</li>
-              <li>• Commands work on any page where they make sense</li>
-              <li>• You can say numbers as words: "five stars" or "5 stars"</li>
+              <li>- Tap the microphone button or say "Stop" to stop listening</li>
+              <li>- Speak clearly and wait for the feedback to appear</li>
+              <li>- Commands work on any page where they make sense</li>
+              <li>- You can say numbers as words: "five stars" or "5 stars"</li>
             </ul>
           </div>
         </div>

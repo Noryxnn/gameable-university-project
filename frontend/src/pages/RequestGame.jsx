@@ -178,7 +178,7 @@ const RequestGame = ({ user }) => {
         userId: user?._id || null,
       });
 
-      setSuccess("🎉 Thank you! Your game request has been submitted successfully. We'll review it soon!");
+      setSuccess("Thank you! Your game request has been submitted successfully. We'll review it soon!");
       setFormData({ gameTitle: "", gameLink: "" });
       setAccessibilityFeatures({
         hearing: false,
@@ -204,7 +204,7 @@ const RequestGame = ({ user }) => {
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent drop-shadow-2xl tracking-tight">
-              🎮 Request a Game
+              Request a Game
             </h1>
             <p className="text-lg sm:text-xl text-white/80 leading-relaxed">
               Can't find a game you love? Let us know and we'll work on adding it to{" "}
@@ -385,7 +385,7 @@ const RequestGame = ({ user }) => {
 
                 {!hasAnyAccessibility() && (
                   <p className="mt-2 text-amber-400/70 text-xs">
-                    ⚠️ Select at least one category
+                    Select at least one category
                   </p>
                 )}
               </div>

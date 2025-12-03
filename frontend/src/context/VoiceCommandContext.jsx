@@ -362,6 +362,7 @@ export const VoiceCommandProvider = ({
   // Initialize voice commands hook
   const {
     isListening,
+    isPassiveListening,
     isSupported,
     transcript,
     interimTranscript,
@@ -369,9 +370,12 @@ export const VoiceCommandProvider = ({
     startListening,
     stopListening,
     toggleListening,
+    startPassiveListening,
+    stopPassiveListening,
   } = useVoiceCommands({
     onCommand: handleCommand,
     continuous: false,
+    enablePassiveListening: true,
   });
 
   // Store stopListening in ref for use by handleAction
@@ -379,6 +383,18 @@ export const VoiceCommandProvider = ({
   useEffect(() => {
     stopListeningRef.current = stopListening;
   }, [stopListening]);
+
+  // Start passive listening on mount (for activation phrase detection)
+  useEffect(() => {
+    // Start passive listening after a short delay to ensure everything is initialized
+    const timer = setTimeout(() => {
+      if (isSupported && !isListening) {
+        startPassiveListening();
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [isSupported, startPassiveListening, isListening]);
 
   // Speak feedback (text-to-speech)
   const speak = useCallback((text) => {
@@ -392,11 +408,14 @@ export const VoiceCommandProvider = ({
 
   const contextValue = {
     isListening,
+    isPassiveListening,
     isSupported,
     transcript,
     startListening,
     stopListening,
     toggleListening,
+    startPassiveListening,
+    stopPassiveListening,
     speak,
     registerHandler,
     unregisterHandler,
@@ -411,6 +430,7 @@ export const VoiceCommandProvider = ({
       {/* Voice Command UI */}
       <VoiceCommandButton
         isListening={isListening}
+        isPassiveListening={isPassiveListening}
         isSupported={isSupported}
         transcript={transcript}
         interimTranscript={interimTranscript}

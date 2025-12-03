@@ -13,7 +13,7 @@ let transporter = null;
 function initializeTransporter() {
   // Check if SMTP is configured
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.warn('⚠️  SMTP credentials not configured. EmailService will not be able to send emails.');
+    console.warn('[WARN] SMTP credentials not configured. EmailService will not be able to send emails.');
     return;
   }
 
@@ -60,9 +60,9 @@ async function send({ to, subject, body, html }) {
 
   try {
     await transporter.sendMail(message);
-    console.log(`✅ Email sent successfully to ${to}`);
+    console.log(`[SUCCESS] Email sent successfully to ${to}`);
   } catch (error) {
-    console.error('❌ Email sending failed:', error);
+    console.error('[ERROR] Email sending failed:', error);
     throw new Error(`Failed to send email: ${error.message}`);
   }
 }

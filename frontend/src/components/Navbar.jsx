@@ -16,12 +16,38 @@ const Navbar = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const searchRef = useRef(null);
   const mobileSearchRef = useRef(null);
+  const profileDropdownRef = useRef(null);
+
+  // Close menus when route changes
+  const prevPathRef = useRef(location.pathname);
+  useEffect(() => {
+    if (prevPathRef.current !== location.pathname) {
+      prevPathRef.current = location.pathname;
+      // Use requestAnimationFrame to avoid synchronous setState in effect
+      requestAnimationFrame(() => {
+        setIsSearchOpen(false);
+        setIsProfileDropdownOpen(false);
+      });
+    }
+  }, [location.pathname]);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
 
   // Close suggestions when clicking outside
   useEffect(() => {
@@ -49,7 +75,7 @@ const Navbar = ({
   const handleLogout = () => {
     localStorage.removeItem("token");
     setUser(null);
-    setIsMenuOpen(false);
+    setIsProfileDropdownOpen(false);
     navigate("/home");
   };
 
@@ -65,14 +91,9 @@ const Navbar = ({
 
   const currentPage = location.pathname.replace("/", "") || "home";
 
-  const handleNavigation = (path) => {
-    navigate(path);
-    setIsMenuOpen(false);
-  };
-
   const handleHomeNavigation = () => {
     clearSearch();
-    setIsMenuOpen(false);
+    setIsProfileDropdownOpen(false);
     navigate("/home");
   };
 
@@ -188,7 +209,7 @@ const Navbar = ({
             ))}
           </ul>
           <div className="px-4 py-2 border-t border-purple-500/20 text-xs text-gray-400">
-            Press <kbd className="bg-purple-500/20 px-1.5 py-0.5 rounded text-purple-300">Enter</kbd> to search all • <kbd className="bg-purple-500/20 px-1.5 py-0.5 rounded text-purple-300">↑↓</kbd> to navigate
+            Press <kbd className="bg-purple-500/20 px-1.5 py-0.5 rounded text-purple-300">Enter</kbd> to search all - <kbd className="bg-purple-500/20 px-1.5 py-0.5 rounded text-purple-300">Up/Down</kbd> to navigate
           </div>
         </div>
       )}
@@ -226,8 +247,8 @@ const Navbar = ({
             </span>
           </button>
 
-          {/* Desktop Navigation - Center */}
-          <div className="hidden lg:flex items-center gap-2 flex-1 justify-center px-6">
+          {/* Desktop Navigation - Center (xl screens only - true desktop) */}
+          <div className="hidden xl:flex items-center gap-2 flex-1 justify-center px-6">
              {user ? (
               <>
                 <button
@@ -264,28 +285,6 @@ const Navbar = ({
                   <span>Social</span>
                 </button>
                 <button
-                  onClick={() => navigate("/profile")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                    isActive("/profile")
-                      ? "bg-purple-600/30 text-purple-300"
-                      : "text-white hover:bg-purple-600/20"
-                  }`}
-                >
-                  <FaUser className="w-5 h-5" />
-                  <span>Profile</span>
-                </button>
-                <button
-                  onClick={() => navigate("/settings")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                    isActive("/settings")
-                      ? "bg-purple-600/30 text-purple-300"
-                      : "text-white hover:bg-purple-600/20"
-                  }`}
-                >
-                  <FaCog className="w-5 h-5" />
-                  <span>Settings</span>
-                </button>
-                <button
                   onClick={() => navigate("/request-game")}
                   className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
                     isActive("/request-game")
@@ -296,32 +295,12 @@ const Navbar = ({
                   <FaPlusCircle className="w-5 h-5" />
                   <span>Request</span>
                 </button>
-                {(user?.isAdmin || user?.isCoAdmin) && (
-                  <button
-                    onClick={() => navigate("/admin")}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                      isActive("/admin") || isActive("/admin/requests") || isActive("/admin/approve-game")
-                        ? "bg-orange-600/30 text-orange-300"
-                        : "text-white hover:bg-orange-600/20"
-                    }`}
-                  >
-                    <FaShieldAlt className="w-5 h-5" />
-                    <span>Admin</span>
-                  </button>
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-white hover:bg-red-600/30 hover:text-red-300 transition-colors"
-                >
-                  <FaSignOutAlt className="w-5 h-5" />
-                  <span>Logout</span>
-                </button>
               </>
             ) : null}
           </div>
 
-          {/* Desktop Search - Right Side */}
-          <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
+          {/* Desktop Search & Profile - Right Side (xl screens only) */}
+          <div className="hidden xl:flex items-center gap-3 flex-shrink-0">
             {currentPage !== "login" && currentPage !== "register" && (
               <div className="relative w-72" ref={searchRef}>
                 <form onSubmit={handleSearchSubmit}>
@@ -357,7 +336,122 @@ const Navbar = ({
                 {renderSuggestions()}
               </div>
             )}
-            {!user && (
+            
+            {/* Profile Picture Dropdown */}
+            {user ? (
+              <div className="relative" ref={profileDropdownRef}>
+                <button
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  className="flex items-center gap-2 p-1 rounded-full border-2 border-transparent hover:border-purple-500/50 transition-all"
+                  aria-label="Open profile menu"
+                >
+                  {user.profilePicture ? (
+                    <img
+                      src={user.profilePicture}
+                      alt={user.username}
+                      className="w-10 h-10 rounded-full object-cover ring-2 ring-purple-500/50"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className={`w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-purple-500/50 ${user.profilePicture ? "hidden" : ""}`}
+                  >
+                    {user.username?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                </button>
+
+                {/* Dropdown Menu - Responsive for all screens */}
+                {isProfileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-64 bg-gray-900/95 backdrop-blur-xl border-2 border-purple-500/40 rounded-2xl shadow-2xl shadow-purple-500/20 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {/* User Info Header */}
+                    <div className="px-4 py-4 border-b border-purple-500/20 bg-black/30">
+                      <div className="flex items-center gap-3">
+                        {user.profilePicture ? (
+                          <img
+                            src={user.profilePicture}
+                            alt={user.username}
+                            className="w-12 h-12 rounded-full object-cover ring-2 ring-purple-500/50"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-lg ring-2 ring-purple-500/50">
+                            {user.username?.charAt(0).toUpperCase() || "U"}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-semibold truncate">{user.username}</p>
+                          <p className="text-purple-400 text-sm truncate">{user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Menu Items - Touch-friendly sizing */}
+                    <div className="py-2">
+                      <button
+                        onClick={() => {
+                          navigate("/profile");
+                          setIsProfileDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-colors active:scale-[0.98] ${
+                          isActive("/profile")
+                            ? "bg-purple-600/30 text-purple-300"
+                            : "text-white/80 hover:bg-purple-600/20"
+                        }`}
+                      >
+                        <FaUser className="w-5 h-5" />
+                        <span className="font-medium">Profile</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/settings");
+                          setIsProfileDropdownOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-colors active:scale-[0.98] ${
+                          isActive("/settings")
+                            ? "bg-purple-600/30 text-purple-300"
+                            : "text-white/80 hover:bg-purple-600/20"
+                        }`}
+                      >
+                        <FaCog className="w-5 h-5" />
+                        <span className="font-medium">Settings</span>
+                      </button>
+                      {(user?.isAdmin || user?.isCoAdmin) && (
+                        <button
+                          onClick={() => {
+                            navigate("/admin");
+                            setIsProfileDropdownOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-4 px-4 py-3 text-left transition-colors active:scale-[0.98] ${
+                            isActive("/admin") || isActive("/admin/requests") || isActive("/admin/approve-game")
+                              ? "bg-orange-600/30 text-orange-300"
+                              : "text-white/80 hover:bg-orange-600/20"
+                          }`}
+                        >
+                          <FaShieldAlt className="w-5 h-5" />
+                          <span className="font-medium">Admin Panel</span>
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Logout */}
+                    <div className="border-t border-purple-500/20 py-2">
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          setIsProfileDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-4 px-4 py-3 text-left text-red-400 hover:bg-red-600/20 active:scale-[0.98] transition-colors"
+                      >
+                        <FaSignOutAlt className="w-5 h-5" />
+                        <span className="font-medium">Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
               <Link
                 to="/login"
                 className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-xl shadow-purple-500/25 px-4 py-2 rounded-xl transition-colors"
@@ -368,9 +462,9 @@ const Navbar = ({
             )}
           </div>
 
-          {/* Mobile Actions */}
-          <div className="flex lg:hidden items-center gap-2">
-            {/* Mobile Search Toggle */}
+          {/* Mobile/Tablet Actions (below xl screens) */}
+          <div className="flex xl:hidden items-center gap-1 sm:gap-2">
+            {/* Search Toggle */}
             {currentPage !== "login" && currentPage !== "register" && (
               <button
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -381,20 +475,88 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white hover:bg-purple-600/30 rounded-xl h-10 w-10 flex items-center justify-center transition-colors"
-              aria-label="Open menu"
-            >
-              {isMenuOpen ? <FaTimes className="w-6 h-6" /> : <FaBars className="w-6 h-6" />}
-            </button>
+            {user ? (
+              <>
+                {/* Settings Button */}
+                <button
+                  onClick={() => navigate("/settings")}
+                  className={`h-10 w-10 flex items-center justify-center rounded-xl transition-colors ${
+                    isActive("/settings")
+                      ? "bg-purple-600/30 text-purple-300"
+                      : "text-white/70 hover:bg-purple-600/20 hover:text-white"
+                  }`}
+                  aria-label="Settings"
+                >
+                  <FaCog className="w-5 h-5" />
+                </button>
+
+                {/* Admin Panel Button (if admin) */}
+                {(user?.isAdmin || user?.isCoAdmin) && (
+                  <button
+                    onClick={() => navigate("/admin")}
+                    className={`h-10 w-10 flex items-center justify-center rounded-xl transition-colors ${
+                      isActive("/admin") || isActive("/admin/requests") || isActive("/admin/approve-game")
+                        ? "bg-orange-600/30 text-orange-300"
+                        : "text-white/70 hover:bg-orange-600/20 hover:text-orange-300"
+                    }`}
+                    aria-label="Admin Panel"
+                  >
+                    <FaShieldAlt className="w-5 h-5" />
+                  </button>
+                )}
+
+                {/* Logout Button */}
+                <button
+                  onClick={handleLogout}
+                  className="h-10 w-10 flex items-center justify-center rounded-xl text-white/70 hover:bg-red-600/20 hover:text-red-400 transition-colors"
+                  aria-label="Logout"
+                >
+                  <FaSignOutAlt className="w-5 h-5" />
+                </button>
+
+                {/* Profile Picture - Direct link to profile */}
+                <button
+                  onClick={() => navigate("/profile")}
+                  className={`flex items-center p-1 rounded-full border-2 transition-all active:scale-95 ${
+                    isActive("/profile")
+                      ? "border-purple-500"
+                      : "border-transparent hover:border-purple-500/50"
+                  }`}
+                  aria-label="Go to profile"
+                >
+                  {user.profilePicture ? (
+                    <img
+                      src={user.profilePicture}
+                      alt={user.username}
+                      className="w-8 h-8 rounded-full object-cover ring-2 ring-purple-500/50"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                        e.target.nextSibling.style.display = "flex";
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className={`w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-purple-500/50 ${user.profilePicture ? "hidden" : ""}`}
+                  >
+                    {user.username?.charAt(0).toUpperCase() || "U"}
+                  </div>
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-lg shadow-purple-500/25 px-3 py-2 rounded-xl transition-colors text-sm font-medium"
+              >
+                <FaUser className="w-4 h-4" />
+                <span>Login</span>
+              </Link>
+            )}
           </div>
         </div>
 
-        {/* Mobile Search Bar (Expandable) */}
+        {/* Mobile/Tablet Search Bar (Expandable) */}
         {isSearchOpen && currentPage !== "login" && currentPage !== "register" && (
-          <div className="lg:hidden pb-4 animate-in slide-in-from-top-2 duration-200">
+          <div className="xl:hidden pb-4 animate-in slide-in-from-top-2 duration-200">
             <div className="relative w-full" ref={mobileSearchRef}>
               <form onSubmit={handleSearchSubmit}>
                 <div className="relative">
@@ -433,134 +595,85 @@ const Navbar = ({
         )}
       </div>
 
-      {/* Mobile Menu Sidebar */}
-      {isMenuOpen && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
-            onClick={() => setIsMenuOpen(false)}
-          />
-          {/* Sidebar */}
-          <div className="fixed right-0 top-0 h-full w-[280px] bg-gradient-to-b from-gray-950 via-purple-950 to-pink-950 border-l border-purple-500/30 z-50 lg:hidden overflow-y-auto">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent text-xl font-bold">
-                  Menu
-                </h2>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="text-white hover:bg-purple-600/30 rounded-lg p-2 transition-colors"
-                >
-                  <FaTimes className="w-5 h-5" />
-                </button>
+      {/* Mobile Bottom Navigation Bar - Only on small screens (phones) */}
+      {user && (
+        <nav className="fixed bottom-0 inset-x-0 z-40 lg:hidden bg-black/95 backdrop-blur-xl border-t border-purple-500/30 safe-area-bottom">
+          <div className="flex items-center justify-around h-16 px-1">
+            <button
+              onClick={handleHomeNavigation}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 transition-colors no-min-touch ${
+                isActive("/home") ? "text-purple-400" : "text-white/60"
+              }`}
+              aria-label="Home"
+            >
+              <FaHome className={`w-5 h-5 ${isActive("/home") ? "scale-110" : ""} transition-transform`} />
+              <span className="text-[10px] mt-1 font-medium">Home</span>
+            </button>
+            <button
+              onClick={() => navigate("/favorites")}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 transition-colors no-min-touch ${
+                isActive("/favorites") ? "text-pink-400" : "text-white/60"
+              }`}
+              aria-label="Favorites"
+            >
+              <FaHeart className={`w-5 h-5 ${isActive("/favorites") ? "scale-110" : ""} transition-transform`} />
+              <span className="text-[10px] mt-1 font-medium">Favorites</span>
+            </button>
+            <button
+              onClick={() => navigate("/social")}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 transition-colors no-min-touch ${
+                isActive("/social") ? "text-cyan-400" : "text-white/60"
+              }`}
+              aria-label="Social"
+            >
+              <FaUsers className={`w-5 h-5 ${isActive("/social") ? "scale-110" : ""} transition-transform`} />
+              <span className="text-[10px] mt-1 font-medium">Social</span>
+            </button>
+            <button
+              onClick={() => navigate("/settings")}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 transition-colors no-min-touch ${
+                isActive("/settings") ? "text-purple-400" : "text-white/60"
+              }`}
+              aria-label="Settings"
+            >
+              <FaCog className={`w-5 h-5 ${isActive("/settings") ? "scale-110" : ""} transition-transform`} />
+              <span className="text-[10px] mt-1 font-medium">Settings</span>
+            </button>
+            <button
+              onClick={() => navigate("/profile")}
+              className={`flex flex-col items-center justify-center flex-1 h-full py-1 transition-colors no-min-touch ${
+                isActive("/profile") ? "text-purple-400" : "text-white/60"
+              }`}
+              aria-label="Profile"
+            >
+              {user.profilePicture ? (
+                <img
+                  src={user.profilePicture}
+                  alt={user.username}
+                  className={`w-6 h-6 rounded-full object-cover ${isActive("/profile") ? "ring-2 ring-purple-400" : "ring-1 ring-purple-500/50"}`}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
+                  }}
+                />
+              ) : null}
+              <div 
+                className={`w-6 h-6 rounded-full bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center text-white font-bold text-[10px] ${isActive("/profile") ? "ring-2 ring-purple-400" : "ring-1 ring-purple-500/50"} ${user.profilePicture ? "hidden" : ""}`}
+              >
+                {user.username?.charAt(0).toUpperCase() || "U"}
               </div>
-
-              <div className="flex flex-col gap-3">
-                {user ? (
-                  <>
-                    <button
-                      onClick={handleHomeNavigation}
-                      className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
-                        isActive("/home")
-                          ? "bg-purple-600/30 text-purple-300"
-                          : "text-white hover:bg-purple-600/20"
-                      }`}
-                    >
-                      <FaHome className="w-5 h-5" />
-                      <span>Home</span>
-                    </button>
-                    <button
-                      onClick={() => handleNavigation("/favorites")}
-                      className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
-                        isActive("/favorites")
-                          ? "bg-pink-600/30 text-pink-300"
-                          : "text-white hover:bg-pink-600/20"
-                      }`}
-                    >
-                      <FaHeart className="w-5 h-5" />
-                      <span>Favorites</span>
-                    </button>
-                    <button
-                      onClick={() => handleNavigation("/social")}
-                      className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
-                        isActive("/social")
-                          ? "bg-cyan-600/30 text-cyan-300"
-                          : "text-white hover:bg-cyan-600/20"
-                      }`}
-                    >
-                      <FaUsers className="w-5 h-5" />
-                      <span>Social</span>
-                    </button>
-                    <button
-                      onClick={() => handleNavigation("/profile")}
-                      className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
-                        isActive("/profile")
-                          ? "bg-purple-600/30 text-purple-300"
-                          : "text-white hover:bg-purple-600/20"
-                      }`}
-                    >
-                      <FaUser className="w-5 h-5" />
-                      <span>Profile</span>
-                    </button>
-                    <button
-                      onClick={() => handleNavigation("/settings")}
-                      className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
-                        isActive("/settings")
-                          ? "bg-purple-600/30 text-purple-300"
-                          : "text-white hover:bg-purple-600/20"
-                      }`}
-                    >
-                      <FaCog className="w-5 h-5" />
-                      <span>Settings</span>
-                    </button>
-                    <button
-                      onClick={() => handleNavigation("/request-game")}
-                      className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
-                        isActive("/request-game")
-                          ? "bg-green-600/30 text-green-300"
-                          : "text-white hover:bg-green-600/20"
-                      }`}
-                    >
-                      <FaPlusCircle className="w-5 h-5" />
-                      <span>Request</span>
-                    </button>
-                    {(user?.isAdmin || user?.isCoAdmin) && (
-                      <button
-                        onClick={() => handleNavigation("/admin")}
-                        className={`flex items-center gap-3 h-12 text-base rounded-xl px-4 transition-colors ${
-                          isActive("/admin") || isActive("/admin/requests") || isActive("/admin/approve-game")
-                            ? "bg-orange-600/30 text-orange-300"
-                            : "text-white hover:bg-orange-600/20"
-                        }`}
-                      >
-                        <FaShieldAlt className="w-5 h-5" />
-                        <span>Admin</span>
-                      </button>
-                    )}
-                    <div className="border-t border-purple-500/20 my-2" />
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-3 h-12 text-base text-red-400 hover:bg-red-600/20 hover:text-red-300 rounded-xl px-4 transition-colors"
-                    >
-                      <FaSignOutAlt className="w-5 h-5" />
-                      <span>Logout</span>
-                    </button>
-                  </>
-                ) : (
-                  <Link
-                    to="/login"
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-3 h-12 text-base bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl px-4 transition-colors"
-                  >
-                    <FaUser className="w-5 h-5" />
-                    <span>Login</span>
-                  </Link>
-                )}
-              </div>
-            </div>
+              <span className="text-[10px] mt-1 font-medium">Profile</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex flex-col items-center justify-center flex-1 h-full py-1 text-white/60 hover:text-red-400 transition-colors no-min-touch"
+              aria-label="Logout"
+            >
+              <FaSignOutAlt className="w-5 h-5" />
+              <span className="text-[10px] mt-1 font-medium">Logout</span>
+            </button>
           </div>
-        </>
+        </nav>
       )}
     </header>
   );
