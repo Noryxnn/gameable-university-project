@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
 
 // We need to test the command parsing logic separately since mocking Web Speech API is complex
 // The parsing logic is the core functionality we want to test

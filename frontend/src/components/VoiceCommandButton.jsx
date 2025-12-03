@@ -1,6 +1,46 @@
+/* eslint-disable react-hooks/set-state-in-effect -- Prop-driven state updates for UI feedback are intentional */
 import React, { useState, useEffect } from 'react';
 import { FaMicrophone, FaMicrophoneSlash, FaQuestionCircle, FaTimes } from 'react-icons/fa';
 import { HiSparkles } from 'react-icons/hi2';
+
+// Helper functions defined outside component to avoid hoisting issues
+const getActionFeedback = (action) => {
+  switch (action) {
+    case 'clearSearch': return 'Clearing search...';
+    case 'clearFilters': return 'Clearing filters...';
+    case 'addFavorite': return 'Adding to favorites...';
+    case 'removeFavorite': return 'Removing from favorites...';
+    case 'toggleFavorite': return 'Toggling favorite...';
+    case 'submitReview': return 'Submitting review...';
+    case 'showHelp': return 'Opening help...';
+    case 'logout': return 'Logging out...';
+    case 'stop': return 'Stopped listening';
+    default: return 'Action executed';
+  }
+};
+
+const getCommandFeedback = (command) => {
+  switch (command.type) {
+    case 'navigate':
+      return `Navigating to ${command.target}...`;
+    case 'search':
+      return `Searching for "${command.query}"...`;
+    case 'filter':
+      return `Applying ${command.filterType} filter: ${command.value}`;
+    case 'sort':
+      return `Sorting by ${command.sortBy}...`;
+    case 'rate':
+      return `Rating: ${command.rating} stars`;
+    case 'review':
+      return `Writing review...`;
+    case 'action':
+      return getActionFeedback(command.action);
+    case 'openGameByName':
+      return `Opening "${command.gameName}"...`;
+    default:
+      return 'Command recognized';
+  }
+};
 
 const VoiceCommandButton = ({ 
   isListening, 
@@ -49,44 +89,6 @@ const VoiceCommandButton = ({
       setFeedbackType('info');
     }
   }, [isListening]);
-
-  const getCommandFeedback = (command) => {
-    switch (command.type) {
-      case 'navigate':
-        return `Navigating to ${command.target}...`;
-      case 'search':
-        return `Searching for "${command.query}"...`;
-      case 'filter':
-        return `Applying ${command.filterType} filter: ${command.value}`;
-      case 'sort':
-        return `Sorting by ${command.sortBy}...`;
-      case 'rate':
-        return `Rating: ${command.rating} stars`;
-      case 'review':
-        return `Writing review...`;
-      case 'action':
-        return getActionFeedback(command.action);
-      case 'openGameByName':
-        return `Opening "${command.gameName}"...`;
-      default:
-        return 'Command recognized';
-    }
-  };
-
-  const getActionFeedback = (action) => {
-    switch (action) {
-      case 'clearSearch': return 'Clearing search...';
-      case 'clearFilters': return 'Clearing filters...';
-      case 'addFavorite': return 'Adding to favorites...';
-      case 'removeFavorite': return 'Removing from favorites...';
-      case 'toggleFavorite': return 'Toggling favorite...';
-      case 'submitReview': return 'Submitting review...';
-      case 'showHelp': return 'Opening help...';
-      case 'logout': return 'Logging out...';
-      case 'stop': return 'Stopped listening';
-      default: return 'Action executed';
-    }
-  };
 
   if (!isSupported) {
     return null; // Don't show button if not supported

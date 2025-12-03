@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useVoiceCommands from '../hooks/useVoiceCommands';
 import VoiceCommandButton, { VoiceCommandHelpModal } from '../components/VoiceCommandButton';
 
 const VoiceCommandContext = createContext(null);
 
+// eslint-disable-next-line react-refresh/only-export-components -- Context hook is commonly exported alongside provider
 export const useVoiceContext = () => {
   const context = useContext(VoiceCommandContext);
   if (!context) {
@@ -23,6 +24,7 @@ export const VoiceCommandProvider = ({
   commitSearch,
   // Filter props  
   setSelectedGenres,
+  // eslint-disable-next-line no-unused-vars
   setSelectedAccessibilityFeatures,
   setSelectedRating,
   setSelectedSort,
@@ -39,6 +41,9 @@ export const VoiceCommandProvider = ({
   
   // Page-specific handlers that can be registered by components
   const [pageHandlers, setPageHandlers] = useState({});
+  
+  // Ref to store stopListening function to avoid circular dependency
+  const stopListeningRef = useRef(null);
 
   // Register a handler for the current page
   const registerHandler = useCallback((handlerName, handler) => {
@@ -57,7 +62,253 @@ export const VoiceCommandProvider = ({
     });
   }, []);
 
-  // Handle voice commands
+  // Navigation handler
+  const handleNavigation = useCallback((target) => {
+    switch (target) {
+      case 'home':
+        if (clearSearch) clearSearch();
+        navigate('/home');
+        break;
+      case 'profile':
+        if (user) {
+          navigate('/profile');
+        } else {
+          navigate('/login');
+        }
+        break;
+      case 'favorites':
+        if (user) {
+          navigate('/favorites');
+        } else {
+          navigate('/login');
+        }
+        break;
+      case 'social':
+        if (user) {
+          navigate('/social');
+        } else {
+          navigate('/login');
+        }
+        break;
+      case 'request-game':
+        if (user) {
+          navigate('/request-game');
+        } else {
+          navigate('/login');
+        }
+        break;
+      case 'login':
+        navigate('/login');
+        break;
+      case 'register':
+        navigate('/register');
+        break;
+      case 'back':
+        navigate(-1);
+        break;
+      default:
+        console.log('Unknown navigation target:', target);
+    }
+  }, [navigate, user, clearSearch]);
+
+  // Search handler
+  const handleSearch = useCallback((query) => {
+    if (setSearchQuery) {
+      setSearchQuery(query);
+      if (commitSearch) {
+        // Small delay to ensure state is updated
+        setTimeout(() => {
+          commitSearch();
+          if (location.pathname !== '/home') {
+            navigate('/home');
+          }
+        }, 100);
+      }
+    }
+  }, [setSearchQuery, commitSearch, location.pathname, navigate]);
+
+  // Filter handler
+  const handleFilter = useCallback((command) => {
+    const { filterType, value } = command;
+    
+    if (filterType === 'genre' && setSelectedGenres && availableGenres) {
+      // Find matching genre (case-insensitive)
+      const matchingGenre = availableGenres.find(
+        g => g.toLowerCase().includes(value.toLowerCase())
+      );
+      if (matchingGenre) {
+        setSelectedGenres(prev => {
+          if (prev.includes(matchingGenre)) {
+            return prev; // Already selected
+          }
+          return [...prev, matchingGenre];
+        });
+      }
+    }
+    
+    // ESRB rating filter (E, E10+, T, M)
+    if (filterType === 'rating' && setSelectedRating) {
+      const lowerValue = value.toLowerCase();
+      if (lowerValue === 'all' || lowerValue === 'any') {
+        setSelectedRating('all');
+      } else if (lowerValue === 'everyone' || lowerValue === 'e') {
+        setSelectedRating('E');
+      } else if (lowerValue === 'everyone 10' || lowerValue === 'e10' || lowerValue === 'e 10') {
+        setSelectedRating('E10+');
+      } else if (lowerValue === 'teen' || lowerValue === 't') {
+        setSelectedRating('T');
+      } else if (lowerValue === 'mature' || lowerValue === 'm') {
+        setSelectedRating('M');
+      }
+    }
+    
+    // Make sure we're on home page to see filters
+    if (location.pathname !== '/home') {
+      navigate('/home');
+    }
+  }, [setSelectedGenres, setSelectedRating, availableGenres, location.pathname, navigate]);
+
+  // Sort handler
+  const handleSort = useCallback((sortBy) => {
+    if (!setSelectedSort) return;
+    
+    switch (sortBy) {
+      case 'rating':
+        setSelectedSort('rating-desc');
+        break;
+      case 'newest':
+        setSelectedSort('releaseYear-desc');
+        break;
+      case 'oldest':
+        setSelectedSort('releaseYear-asc');
+        break;
+      case 'name':
+        setSelectedSort('title-asc');
+        break;
+      case 'default':
+        setSelectedSort('default');
+        break;
+      default:
+        console.log('Unknown sort option:', sortBy);
+    }
+    
+    // Make sure we're on home page to see results
+    if (location.pathname !== '/home') {
+      navigate('/home');
+    }
+  }, [setSelectedSort, location.pathname, navigate]);
+
+  // Scroll handler
+  const handleScroll = useCallback((direction) => {
+    if (direction === 'top') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else if (direction === 'bottom') {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+  }, []);
+
+  // Open game by name handler
+  const handleOpenGameByName = useCallback((gameName) => {
+    if (!allGames || allGames.length === 0) {
+      console.log('No games available to search');
+      return;
+    }
+
+    const lowerGameName = gameName.toLowerCase();
+    
+    // Try to find exact match first
+    let matchingGame = allGames.find(
+      game => game.title.toLowerCase() === lowerGameName
+    );
+    
+    // If no exact match, try partial match (title contains the search term)
+    if (!matchingGame) {
+      matchingGame = allGames.find(
+        game => game.title.toLowerCase().includes(lowerGameName)
+      );
+    }
+    
+    // If still no match, try fuzzy matching (search term contains part of title)
+    if (!matchingGame) {
+      matchingGame = allGames.find(
+        game => lowerGameName.includes(game.title.toLowerCase().split(' ')[0])
+      );
+    }
+
+    if (matchingGame) {
+      navigate(`/game/${matchingGame._id}`);
+    } else {
+      // If no game found, perform a search instead
+      if (setSearchQuery && commitSearch) {
+        setSearchQuery(gameName);
+        setTimeout(() => {
+          commitSearch();
+          if (location.pathname !== '/home') {
+            navigate('/home');
+          }
+        }, 100);
+      }
+    }
+  }, [allGames, navigate, setSearchQuery, commitSearch, location.pathname]);
+
+  // Action handler (uses ref for stopListening to avoid circular dependency)
+  const handleAction = useCallback((action, command) => {
+    switch (action) {
+      case 'clearSearch':
+        if (clearSearch) clearSearch();
+        break;
+      
+      case 'clearFilters':
+        if (handleClearFilters) handleClearFilters();
+        break;
+      
+      case 'addFavorite':
+      case 'removeFavorite':
+      case 'toggleFavorite':
+        if (pageHandlers.toggleFavorite) {
+          pageHandlers.toggleFavorite();
+        }
+        break;
+      
+      case 'submitReview':
+        if (pageHandlers.submitReview) {
+          pageHandlers.submitReview();
+        }
+        break;
+      
+      case 'showHelp':
+        setShowHelp(true);
+        break;
+      
+      case 'logout':
+        if (user && setUser) {
+          localStorage.removeItem('token');
+          setUser(null);
+          navigate('/home');
+        }
+        break;
+      
+      case 'stop':
+        if (stopListeningRef.current) {
+          stopListeningRef.current();
+        }
+        break;
+      
+      case 'openGame':
+        if (filteredGames && command.gameIndex) {
+          const gameIndex = command.gameIndex - 1; // Convert to 0-based
+          if (gameIndex >= 0 && gameIndex < filteredGames.length) {
+            navigate(`/game/${filteredGames[gameIndex]._id}`);
+          }
+        }
+        break;
+      
+      default:
+        console.log('Unknown action:', action);
+    }
+  }, [clearSearch, handleClearFilters, pageHandlers, user, setUser, navigate, filteredGames]);
+
+  // Handle voice commands - now all handlers are defined above
   const handleCommand = useCallback((command) => {
     console.log('Voice command received:', command);
     setLastCommand(command);
@@ -106,251 +357,7 @@ export const VoiceCommandProvider = ({
       default:
         console.log('Unknown command type:', command.type);
     }
-  }, [pageHandlers, user, navigate, location, allGames]);
-
-  // Navigation handler
-  const handleNavigation = (target) => {
-    switch (target) {
-      case 'home':
-        if (clearSearch) clearSearch();
-        navigate('/home');
-        break;
-      case 'profile':
-        if (user) {
-          navigate('/profile');
-        } else {
-          navigate('/login');
-        }
-        break;
-      case 'favorites':
-        if (user) {
-          navigate('/favorites');
-        } else {
-          navigate('/login');
-        }
-        break;
-      case 'social':
-        if (user) {
-          navigate('/social');
-        } else {
-          navigate('/login');
-        }
-        break;
-      case 'request-game':
-        if (user) {
-          navigate('/request-game');
-        } else {
-          navigate('/login');
-        }
-        break;
-      case 'login':
-        navigate('/login');
-        break;
-      case 'register':
-        navigate('/register');
-        break;
-      case 'back':
-        navigate(-1);
-        break;
-      default:
-        console.log('Unknown navigation target:', target);
-    }
-  };
-
-  // Search handler
-  const handleSearch = (query) => {
-    if (setSearchQuery) {
-      setSearchQuery(query);
-      if (commitSearch) {
-        // Small delay to ensure state is updated
-        setTimeout(() => {
-          commitSearch();
-          if (location.pathname !== '/home') {
-            navigate('/home');
-          }
-        }, 100);
-      }
-    }
-  };
-
-  // Filter handler
-  const handleFilter = (command) => {
-    const { filterType, value } = command;
-    
-    if (filterType === 'genre' && setSelectedGenres && availableGenres) {
-      // Find matching genre (case-insensitive)
-      const matchingGenre = availableGenres.find(
-        g => g.toLowerCase().includes(value.toLowerCase())
-      );
-      if (matchingGenre) {
-        setSelectedGenres(prev => {
-          if (prev.includes(matchingGenre)) {
-            return prev; // Already selected
-          }
-          return [...prev, matchingGenre];
-        });
-      }
-    }
-    
-    // ESRB rating filter (E, E10+, T, M)
-    if (filterType === 'rating' && setSelectedRating) {
-      const lowerValue = value.toLowerCase();
-      if (lowerValue === 'all' || lowerValue === 'any') {
-        setSelectedRating('all');
-      } else if (lowerValue === 'everyone' || lowerValue === 'e') {
-        setSelectedRating('E');
-      } else if (lowerValue === 'everyone 10' || lowerValue === 'e10' || lowerValue === 'e 10') {
-        setSelectedRating('E10+');
-      } else if (lowerValue === 'teen' || lowerValue === 't') {
-        setSelectedRating('T');
-      } else if (lowerValue === 'mature' || lowerValue === 'm') {
-        setSelectedRating('M');
-      }
-    }
-    
-    // Make sure we're on home page to see filters
-    if (location.pathname !== '/home') {
-      navigate('/home');
-    }
-  };
-
-  // Sort handler
-  const handleSort = (sortBy) => {
-    if (!setSelectedSort) return;
-    
-    switch (sortBy) {
-      case 'rating':
-        setSelectedSort('rating-desc');
-        break;
-      case 'newest':
-        setSelectedSort('releaseYear-desc');
-        break;
-      case 'oldest':
-        setSelectedSort('releaseYear-asc');
-        break;
-      case 'name':
-        setSelectedSort('title-asc');
-        break;
-      case 'default':
-        setSelectedSort('default');
-        break;
-      default:
-        console.log('Unknown sort option:', sortBy);
-    }
-    
-    // Make sure we're on home page to see results
-    if (location.pathname !== '/home') {
-      navigate('/home');
-    }
-  };
-
-  // Action handler
-  const handleAction = (action, command) => {
-    switch (action) {
-      case 'clearSearch':
-        if (clearSearch) clearSearch();
-        break;
-      
-      case 'clearFilters':
-        if (handleClearFilters) handleClearFilters();
-        break;
-      
-      case 'addFavorite':
-      case 'removeFavorite':
-      case 'toggleFavorite':
-        if (pageHandlers.toggleFavorite) {
-          pageHandlers.toggleFavorite();
-        }
-        break;
-      
-      case 'submitReview':
-        if (pageHandlers.submitReview) {
-          pageHandlers.submitReview();
-        }
-        break;
-      
-      case 'showHelp':
-        setShowHelp(true);
-        break;
-      
-      case 'logout':
-        if (user && setUser) {
-          localStorage.removeItem('token');
-          setUser(null);
-          navigate('/home');
-        }
-        break;
-      
-      case 'stop':
-        stopListening();
-        break;
-      
-      case 'openGame':
-        if (filteredGames && command.gameIndex) {
-          const gameIndex = command.gameIndex - 1; // Convert to 0-based
-          if (gameIndex >= 0 && gameIndex < filteredGames.length) {
-            navigate(`/game/${filteredGames[gameIndex]._id}`);
-          }
-        }
-        break;
-      
-      default:
-        console.log('Unknown action:', action);
-    }
-  };
-
-  // Scroll handler
-  const handleScroll = (direction) => {
-    if (direction === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (direction === 'bottom') {
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }
-  };
-
-  // Open game by name handler
-  const handleOpenGameByName = (gameName) => {
-    if (!allGames || allGames.length === 0) {
-      console.log('No games available to search');
-      return;
-    }
-
-    const lowerGameName = gameName.toLowerCase();
-    
-    // Try to find exact match first
-    let matchingGame = allGames.find(
-      game => game.title.toLowerCase() === lowerGameName
-    );
-    
-    // If no exact match, try partial match (title contains the search term)
-    if (!matchingGame) {
-      matchingGame = allGames.find(
-        game => game.title.toLowerCase().includes(lowerGameName)
-      );
-    }
-    
-    // If still no match, try fuzzy matching (search term contains part of title)
-    if (!matchingGame) {
-      matchingGame = allGames.find(
-        game => lowerGameName.includes(game.title.toLowerCase().split(' ')[0])
-      );
-    }
-
-    if (matchingGame) {
-      navigate(`/game/${matchingGame._id}`);
-    } else {
-      // If no game found, perform a search instead
-      if (setSearchQuery && commitSearch) {
-        setSearchQuery(gameName);
-        setTimeout(() => {
-          commitSearch();
-          if (location.pathname !== '/home') {
-            navigate('/home');
-          }
-        }, 100);
-      }
-    }
-  };
+  }, [handleNavigation, handleSearch, handleFilter, handleSort, handleAction, handleScroll, handleOpenGameByName, pageHandlers]);
 
   // Initialize voice commands hook
   const {
@@ -366,6 +373,12 @@ export const VoiceCommandProvider = ({
     onCommand: handleCommand,
     continuous: false,
   });
+
+  // Store stopListening in ref for use by handleAction
+  // Using useEffect to update ref after render to avoid accessing refs during render
+  useEffect(() => {
+    stopListeningRef.current = stopListening;
+  }, [stopListening]);
 
   // Speak feedback (text-to-speech)
   const speak = useCallback((text) => {
@@ -417,4 +430,3 @@ export const VoiceCommandProvider = ({
 };
 
 export default VoiceCommandContext;
-

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act, waitFor } from "@testing-library/react";
-import { MemoryRouter, useLocation } from "react-router-dom";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { VoiceCommandProvider, useVoiceContext } from "./VoiceCommandContext";
 
 // Mock the useVoiceCommands hook
