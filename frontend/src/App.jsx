@@ -8,30 +8,250 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import GoogleCallback from "./pages/GoogleCallback";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
+import RequestGame from "./pages/RequestGame";
+import Social from "./pages/Social";
+import UserProfile from "./pages/UserProfile";
+import GameDetail from "./pages/GameDetail";
+import Favorites from "./pages/Favorites";
+import AdminRequests from "./pages/AdminRequests";
+import AdminGameApproval from "./pages/AdminGameApproval";
+import AdminDashboard from "./pages/AdminDashboard";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import NotFound from "./components/NotFound";
+import useGameSearch from "./hooks/useGameSearch";
+import { VoiceCommandProvider } from "./context/VoiceCommandContext";
+import { SORT_OPTIONS, RATING_FILTERS } from "./utils/gameConstants";
 
 function App() {
   const [user, setUser] = useState(null);
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  console.log(user);
+  
+  // Filter state (lifted up for voice commands)
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [selectedAccessibilityFeatures, setSelectedAccessibilityFeatures] = useState([]);
+  const [selectedRating, setSelectedRating] = useState(RATING_FILTERS.ALL);
+  const [selectedSort, setSelectedSort] = useState(SORT_OPTIONS.DEFAULT);
+  
+  // Game search hook
+  const {
+    allGames,
+    filteredGames,
+    loading: gamesLoading,
+    error: gamesError,
+    searchQuery,
+    setSearchQuery,
+    activeSearch,
+    commitSearch,
+    suggestions,
+    clearSearch,
+  } = useGameSearch();
+  
+  // Derive available genres from all games
+  const availableGenres = allGames?.reduce((genres, game) => {
+    if (game.genre) {
+      game.genre.split(',').forEach(g => {
+        const trimmed = g.trim();
+        if (trimmed && !genres.includes(trimmed)) {
+          genres.push(trimmed);
+        }
+      });
+    }
+    return genres;
+  }, []) || [];
+  
+  // Clear filters handler
+  const handleClearFilters = () => {
+    setSelectedGenres([]);
+    setSelectedAccessibilityFeatures([]);
+    setSelectedRating(RATING_FILTERS.ALL);
+    setSelectedSort(SORT_OPTIONS.DEFAULT);
+  };
+  
+  // Axios interceptor to handle banned users globally
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        // Check if user was banned
+        if (error.response?.status === 403 && error.response?.data?.banned) {
+          localStorage.removeItem("token");
+          setUser(null);
+          alert("Your account has been banned. Please contact support.");
+          window.location.href = "/login";
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, []);
+  
+  // Load and apply color blind mode preference on app load and listen for changes
+  useEffect(() => {
+    const applyColorBlindFilter = () => {
+      const savedColorBlindMode = localStorage.getItem("colorBlindMode") || "none";
+      const colorBlindFilters = {
+        none: "none",
+        protanopia: "url(#protanopia)",
+        deuteranopia: "url(#deuteranopia)",
+        tritanopia: "url(#tritanopia)",
+      };
+      
+      document.body.style.filter = colorBlindFilters[savedColorBlindMode] || "none";
+    };
+
+    // Apply on initial load
+    applyColorBlindFilter();
+
+    // Listen for storage changes (when Settings page updates it)
+    const handleStorageChange = (e) => {
+      if (e.key === "colorBlindMode") {
+        applyColorBlindFilter();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    
+    // Also listen for custom event from Settings page (for same-tab updates)
+    const handleCustomStorageChange = () => {
+      applyColorBlindFilter();
+    };
+    
+    window.addEventListener("colorBlindModeChanged", handleCustomStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("colorBlindModeChanged", handleCustomStorageChange);
+    };
+  }, []);
+
+  // Text-to-Speech functionality
+  useEffect(() => {
+    const isTextToSpeechEnabled = () => {
+      return localStorage.getItem("textToSpeechEnabled") === "true";
+    };
+
+    const speakText = (text) => {
+      if (!window.speechSynthesis || !text) return;
+      
+      // Stop any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      // Create a new speech utterance
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      
+      // Speak the text
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const handleTextClick = (e) => {
+      // Don't trigger on buttons, inputs, links, or interactive elements
+      if (
+        e.target.tagName === "BUTTON" ||
+        e.target.tagName === "INPUT" ||
+        e.target.tagName === "A" ||
+        e.target.tagName === "SELECT" ||
+        e.target.closest("button") ||
+        e.target.closest("a") ||
+        e.target.closest("input") ||
+        e.target.closest("select")
+      ) {
+        return;
+      }
+
+      if (!isTextToSpeechEnabled()) return;
+
+      // Get the text content
+      const text = e.target.textContent?.trim() || e.target.innerText?.trim();
+      
+      if (text && text.length > 0) {
+        // Limit the text length to avoid reading too much
+        const maxLength = 500;
+        const textToSpeak = text.length > maxLength 
+          ? text.substring(0, maxLength) + "..."
+          : text;
+        
+        speakText(textToSpeak);
+      }
+    };
+
+    // Apply text-to-speech on initial load
+    if (isTextToSpeechEnabled()) {
+      document.addEventListener("click", handleTextClick);
+    }
+
+    // Listen for text-to-speech changes
+    const handleTextToSpeechChange = (e) => {
+      const enabled = e.detail?.enabled ?? isTextToSpeechEnabled();
+      
+      if (enabled) {
+        document.addEventListener("click", handleTextClick);
+      } else {
+        document.removeEventListener("click", handleTextClick);
+        window.speechSynthesis?.cancel();
+      }
+    };
+
+    window.addEventListener("textToSpeechChanged", handleTextToSpeechChange);
+
+    return () => {
+      document.removeEventListener("click", handleTextClick);
+      window.removeEventListener("textToSpeechChanged", handleTextToSpeechChange);
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
-        try {
-          const res = await axios.get("/api/users/me", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setUser(res.data);
-        } catch (err) {
-          setError("Failed to fetch user data");
-          localStorage.removeItem("token");
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          try {
+            const res = await axios.get("/api/users/me", {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            
+            // Check if user is banned
+            if (res.data.isBanned) {
+              localStorage.removeItem("token");
+              setUser(null);
+              alert("Your account has been banned. Please contact support.");
+              window.location.href = "/login";
+              return;
+            }
+            
+            setUser(res.data);
+          } catch (err) {
+            // Check if user was banned
+            if (err.response?.data?.banned || err.response?.status === 403) {
+              localStorage.removeItem("token");
+              setUser(null);
+              alert("Your account has been banned. Please contact support.");
+              window.location.href = "/login";
+              return;
+            }
+            
+            // Silently fail if backend is not available or token is invalid
+            console.error("Error fetching user:", err);
+            localStorage.removeItem("token");
+          }
         }
+      } catch (err) {
+        console.error("Error in fetchUser:", err);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     fetchUser();
   }, []);
@@ -46,19 +266,115 @@ function App() {
 
   return (
     <Router>
-      <Navbar user={user} setUser={setUser} />
-      <Routes>
-        <Route path="/" element={<Home user={user} error={error} />} />
-        <Route
-          path="/login"
-          element={user ? <Navigate to="/" /> : <Login setUser={setUser} />}
+      <VoiceCommandProvider
+        user={user}
+        setUser={setUser}
+        setSearchQuery={setSearchQuery}
+        clearSearch={clearSearch}
+        commitSearch={commitSearch}
+        setSelectedGenres={setSelectedGenres}
+        setSelectedAccessibilityFeatures={setSelectedAccessibilityFeatures}
+        setSelectedRating={setSelectedRating}
+        setSelectedSort={setSelectedSort}
+        handleClearFilters={handleClearFilters}
+        filteredGames={filteredGames}
+        allGames={allGames}
+        availableGenres={availableGenres}
+      >
+        <Navbar 
+          user={user} 
+          setUser={setUser}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          suggestions={suggestions}
+          clearSearch={clearSearch}
+          commitSearch={commitSearch}
         />
-        <Route
-          path="/register"
-          element={user ? <Navigate to="/" /> : <Register setUser={setUser} />}
-        />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route 
+            path="/home" 
+            element={
+              <Home 
+                user={user} 
+                allGames={allGames}
+                filteredGames={filteredGames}
+                gamesLoading={gamesLoading}
+                gamesError={gamesError}
+                activeSearch={activeSearch}
+                clearSearch={clearSearch}
+                selectedGenres={selectedGenres}
+                setSelectedGenres={setSelectedGenres}
+                selectedAccessibilityFeatures={selectedAccessibilityFeatures}
+                setSelectedAccessibilityFeatures={setSelectedAccessibilityFeatures}
+                selectedRating={selectedRating}
+                setSelectedRating={setSelectedRating}
+                selectedSort={selectedSort}
+                setSelectedSort={setSelectedSort}
+                handleClearFilters={handleClearFilters}
+              />
+            } 
+          />
+          <Route path="/game/:id" element={<GameDetail user={user} />} />
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/home" /> : <Login setUser={setUser} />}
+          />
+          <Route
+            path="/register"
+            element={user ? <Navigate to="/home" /> : <Register setUser={setUser} />}
+          />
+          <Route
+            path="/forgot-password"
+            element={user ? <Navigate to="/home" /> : <ForgotPassword />}
+          />
+          <Route
+            path="/reset-password/:token"
+            element={user ? <Navigate to="/home" /> : <ResetPassword />}
+          />
+          <Route
+            path="/auth/google/callback"
+            element={<GoogleCallback setUser={setUser} />}
+          />
+          <Route
+            path="/profile"
+            element={user ? <Profile user={user} setUser={setUser} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/settings"
+            element={user ? <Settings user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/request-game"
+            element={user ? <RequestGame user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/social"
+            element={user ? <Social user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/user/:userId"
+            element={user ? <UserProfile user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/favorites"
+            element={user ? <Favorites user={user} /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/admin"
+            element={(user?.isAdmin || user?.isCoAdmin) ? <AdminDashboard user={user} /> : <Navigate to="/home" />}
+          />
+          <Route
+            path="/admin/requests"
+            element={(user?.isAdmin || user?.isCoAdmin) ? <AdminRequests user={user} /> : <Navigate to="/home" />}
+          />
+          <Route
+            path="/admin/approve-game/:requestId"
+            element={(user?.isAdmin || user?.isCoAdmin) ? <AdminGameApproval user={user} /> : <Navigate to="/home" />}
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </VoiceCommandProvider>
     </Router>
   );
 }

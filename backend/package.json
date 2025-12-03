@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "seed": "node scripts/seedGames.js",
+    "migrate": "node scripts/migrateUsers.js",
+    "createAdmin": "node scripts/createAdmin.js",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "keywords": [],
   "author": "",
@@ -13,9 +18,21 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.3"
+    "mongodb": "^7.0.0",
+    "mongoose": "^8.20.1",
+    "multer": "^2.0.2",
+    "nodemailer": "^7.0.11",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0"
+  },
+  "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.14",
+    "supertest": "^7.0.0",
+    "vitest": "^4.0.14"
   }
 }
