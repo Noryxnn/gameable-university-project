@@ -315,7 +315,7 @@ const GameDetail = ({ user }) => {
                       <h1 className="text-cyan-400 text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black">
                         {game.title}
                       </h1>
-                      {user?.isAdmin && (
+                      {(user?.isAdmin || user?.isCoAdmin) && (
                         <button
                           onClick={handleDeleteGame}
                           className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg sm:rounded-xl transition-colors font-medium text-xs sm:text-sm"
@@ -486,7 +486,7 @@ const GameDetail = ({ user }) => {
                 <div className="space-y-3 sm:space-y-4">
                   {reviews.map((review) => {
                     const isReviewOwner = user && review.userId === user._id;
-                    const isAdminUser = user && user.isAdmin;
+                    const isAdminUser = user && (user.isAdmin || user.isCoAdmin);
                     const canDelete = isReviewOwner || isAdminUser;
 
                     return (
