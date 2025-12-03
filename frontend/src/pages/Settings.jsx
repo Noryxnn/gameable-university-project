@@ -4,11 +4,20 @@ import { FaUser, FaCog, FaEye, FaVolumeUp } from "react-icons/fa";
 
 const Settings = ({ user }) => {
   const navigate = useNavigate();
+  
+  // Initialize state directly from localStorage (no useEffect needed)
   const [colorBlindMode, setColorBlindMode] = useState(() => {
-    return localStorage.getItem("colorBlindMode") || "none";
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("colorBlindMode") || "none";
+    }
+    return "none";
   });
+  
   const [textToSpeechEnabled, setTextToSpeechEnabled] = useState(() => {
-    return localStorage.getItem("textToSpeechEnabled") === "true";
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("textToSpeechEnabled") === "true";
+    }
+    return false;
   });
 
   const getImageSrc = (imagePath) => {
@@ -46,13 +55,8 @@ const Settings = ({ user }) => {
     
     // Dispatch custom event to notify App.jsx of the change
     window.dispatchEvent(new Event("colorBlindModeChanged"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [colorBlindMode]);
-
-  // Load color blind mode on mount
-  useEffect(() => {
-    const savedMode = localStorage.getItem("colorBlindMode") || "none";
-    setColorBlindMode(savedMode);
-  }, []);
 
   const handleColorBlindChange = (mode) => {
     setColorBlindMode(mode);
@@ -72,11 +76,7 @@ const Settings = ({ user }) => {
     }
   };
 
-  // Load text-to-speech preference on mount
-  useEffect(() => {
-    const savedEnabled = localStorage.getItem("textToSpeechEnabled") === "true";
-    setTextToSpeechEnabled(savedEnabled);
-  }, []);
+  // No need for useEffect to load from localStorage - state is initialized directly
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-black to-pink-900 py-20">

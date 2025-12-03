@@ -228,7 +228,7 @@ const Navbar = ({
 
           {/* Desktop Navigation - Center */}
           <div className="hidden lg:flex items-center gap-2 flex-1 justify-center px-6">
-            {user ? (
+             {user ? (
               <>
                 <button
                   onClick={handleHomeNavigation}
