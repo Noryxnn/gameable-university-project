@@ -37,8 +37,24 @@ export const admin = async (req, res, next) => {
     return res.status(401).json({ message: "Not authorized" });
   }
 
-  if (!req.user.isAdmin) {
+  // Allow both main admin and co-admin
+  if (!req.user.isAdmin && !req.user.isCoAdmin) {
     return res.status(403).json({ message: "Access denied. Admin privileges required." });
+  }
+
+  next();
+};
+
+// Middleware to check if user is the main admin (admin@admin.com)
+// Only main admin can promote/unpromote users
+export const mainAdmin = async (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ message: "Not authorized" });
+  }
+
+  // Only admin@admin.com can perform this action
+  if (req.user.email !== "admin@admin.com" || !req.user.isAdmin) {
+    return res.status(403).json({ message: "Access denied. Main admin privileges required." });
   }
 
   next();

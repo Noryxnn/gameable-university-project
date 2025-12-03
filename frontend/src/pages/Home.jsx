@@ -20,14 +20,36 @@ const Home = ({
   gamesError,
   activeSearch,
   clearSearch,
+  // Filter props from parent (for voice commands)
+  selectedGenres = [],
+  setSelectedGenres,
+  selectedAccessibilityFeatures = [],
+  setSelectedAccessibilityFeatures,
+  selectedRating = RATING_FILTERS.ALL,
+  setSelectedRating,
+  selectedSort = SORT_OPTIONS.DEFAULT,
+  setSelectedSort,
+  handleClearFilters: parentClearFilters,
 }) => {
   const navigate = useNavigate();
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [showFilters, setShowFilters] = useState(true); // Show filters by default on desktop
-  const [selectedGenres, setSelectedGenres] = useState([]);
-  const [selectedAccessibilityFeatures, setSelectedAccessibilityFeatures] = useState([]);
-  const [selectedRating, setSelectedRating] = useState(RATING_FILTERS.ALL);
-  const [selectedSort, setSelectedSort] = useState(SORT_OPTIONS.DEFAULT);
+  
+  // Use local state if props not provided (backwards compatibility)
+  const [localGenres, setLocalGenres] = useState([]);
+  const [localAccessibility, setLocalAccessibility] = useState([]);
+  const [localRating, setLocalRating] = useState(RATING_FILTERS.ALL);
+  const [localSort, setLocalSort] = useState(SORT_OPTIONS.DEFAULT);
+  
+  // Use props if provided, otherwise use local state
+  const genres = setSelectedGenres ? selectedGenres : localGenres;
+  const setGenres = setSelectedGenres || setLocalGenres;
+  const accessibility = setSelectedAccessibilityFeatures ? selectedAccessibilityFeatures : localAccessibility;
+  const setAccessibility = setSelectedAccessibilityFeatures || setLocalAccessibility;
+  const rating = setSelectedRating ? selectedRating : localRating;
+  const setRating = setSelectedRating || setLocalRating;
+  const sort = setSelectedSort ? selectedSort : localSort;
+  const setSort = setSelectedSort || setLocalSort;
 
   const fetchFavorites = useCallback(async () => {
     if (!user) return;
@@ -103,26 +125,30 @@ const Home = ({
     result = result || [];
     
     // Apply genre and accessibility filters (client-side, like rating/sorting)
-    if (selectedGenres.length > 0 || selectedAccessibilityFeatures.length > 0) {
+    if (genres.length > 0 || accessibility.length > 0) {
       result = result.filter(game => 
-        matchesFilters(game, selectedGenres, selectedAccessibilityFeatures)
+        matchesFilters(game, genres, accessibility)
       );
     }
     
     // Apply rating filter
-    result = filterGamesByRating(result, selectedRating);
+    result = filterGamesByRating(result, rating);
     
     // Apply sorting
-    result = sortGames(result, selectedSort);
+    result = sortGames(result, sort);
     
     return result;
-  }, [searchFilteredGames, allGames, activeSearch, selectedGenres, selectedAccessibilityFeatures, selectedRating, selectedSort]);
+  }, [searchFilteredGames, allGames, activeSearch, genres, accessibility, rating, sort]);
 
   const handleClearFilters = () => {
-    setSelectedGenres([]);
-    setSelectedAccessibilityFeatures([]);
-    setSelectedRating(RATING_FILTERS.ALL);
-    setSelectedSort(SORT_OPTIONS.DEFAULT);
+    if (parentClearFilters) {
+      parentClearFilters();
+    } else {
+      setGenres([]);
+      setAccessibility([]);
+      setRating(RATING_FILTERS.ALL);
+      setSort(SORT_OPTIONS.DEFAULT);
+    }
   };
 
   const handleClearAllFiltersAndSearch = () => {
@@ -150,7 +176,7 @@ const Home = ({
   }
 
   const totalGames = allGames?.length || 0;
-  const hasActiveFilters = selectedGenres.length > 0 || selectedAccessibilityFeatures.length > 0 || selectedRating !== RATING_FILTERS.ALL || selectedSort !== SORT_OPTIONS.DEFAULT;
+  const hasActiveFilters = genres.length > 0 || accessibility.length > 0 || rating !== RATING_FILTERS.ALL || sort !== SORT_OPTIONS.DEFAULT;
   const isSearching = activeSearch && activeSearch.trim().length > 0;
 
   return (
@@ -212,14 +238,14 @@ const Home = ({
               <GameFilters
                 availableGenres={availableGenres}
                 availableAccessibilityFeatures={availableAccessibilityFeatures}
-                selectedGenres={selectedGenres}
-                selectedAccessibilityFeatures={selectedAccessibilityFeatures}
-                selectedRating={selectedRating}
-                selectedSort={selectedSort}
-                onChangeSelectedGenres={setSelectedGenres}
-                onChangeSelectedAccessibilityFeatures={setSelectedAccessibilityFeatures}
-                onChangeSelectedRating={setSelectedRating}
-                onChangeSelectedSort={setSelectedSort}
+                selectedGenres={genres}
+                selectedAccessibilityFeatures={accessibility}
+                selectedRating={rating}
+                selectedSort={sort}
+                onChangeSelectedGenres={setGenres}
+                onChangeSelectedAccessibilityFeatures={setAccessibility}
+                onChangeSelectedRating={setRating}
+                onChangeSelectedSort={setSort}
                 onClearFilters={handleClearFilters}
               />
             </div>
@@ -247,7 +273,7 @@ const Home = ({
                 <span>Filters</span>
                 {hasActiveFilters && (
                   <span className="bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full w-7 h-7 flex items-center justify-center font-bold shadow-lg shadow-pink-500/50 text-sm">
-                    {selectedGenres.length + selectedAccessibilityFeatures.length}
+                    {genres.length + accessibility.length}
                   </span>
                 )}
               </button>

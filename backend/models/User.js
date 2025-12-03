@@ -12,6 +12,7 @@ const userSchema = new mongoose.Schema({
     googleId: { type: String, unique: true, sparse: true },
     authProvider: { type: String, enum: ["local", "google"], default: "local" },
     isAdmin: { type: Boolean, default: false },
+    isCoAdmin: { type: Boolean, default: false },
     isBanned: { type: Boolean, default: false },
     bio: { type: String, default: "" },
     profilePicture: { type: String, default: "" },
