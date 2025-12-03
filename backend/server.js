@@ -9,6 +9,7 @@ import authRoutes from './routes/auth.js'
 import gamesRoutes from './routes/games.js'
 import gameRequestsRoutes from './routes/gameRequests.js'
 import reviewsRoutes from './routes/reviews.js'
+import chatRoutes from './routes/chat.js'
 import { connectDB } from "./config/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -78,6 +79,7 @@ app.use("/api/users", authRoutes)
 app.use("/api/games", gamesRoutes)
 app.use("/api/game-requests", gameRequestsRoutes)
 app.use("/api/reviews", reviewsRoutes)
+app.use("/api/chat", chatRoutes)
 
 // 404 handler for API routes (must be last)
 // Express 5 doesn't support /api/* pattern, so we catch all unmatched /api routes
@@ -112,7 +114,13 @@ app.use((req, res, next) => {
         "GET /api/games",
         "GET /api/games/:id",
         "POST /api/game-requests",
-        "GET /api/game-requests"
+        "GET /api/game-requests",
+        "GET /api/chat/conversations",
+        "GET /api/chat/conversations/:friendId",
+        "GET /api/chat/messages/:conversationId",
+        "POST /api/chat/messages/:conversationId",
+        "GET /api/chat/unread",
+        "POST /api/chat/messages/:conversationId/read"
       ]
     });
   } else {
