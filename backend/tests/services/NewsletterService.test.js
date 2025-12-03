@@ -4,14 +4,14 @@ import dotenv from "dotenv";
 import User from "../../../models/User.js";
 import newsletterService from "../../../services/NewsletterService.js";
 
-// Load environment variables
+// Load env variables
 dotenv.config();
 
-// Create mock functions that will be used in the mock
+// Create mock functions
 const mockSend = vi.fn();
 const mockIsConfigured = vi.fn(() => true);
 
-// Mock EmailService
+// Mock EmailService BEFORE import
 vi.mock("../../../services/EmailService.js", () => {
   return {
     default: {
@@ -21,190 +21,160 @@ vi.mock("../../../services/EmailService.js", () => {
   };
 });
 
-// Import emailService after mocking
+// Import after mocking
 import emailService from "../../../services/EmailService.js";
 
 describe("NewsletterService", () => {
-  let testUsers = [];
-
   beforeAll(async () => {
-    // Connect to test database
     const testDbUri = process.env.TEST_MONGO_URI || process.env.MONGO_URI;
-    
+
     if (!testDbUri) {
-      throw new Error(
-        "TEST_MONGO_URI or MONGO_URI must be set in environment variables for integration tests"
-      );
+      throw new Error("TEST_MONGO_URI or MONGO_URI must be set for tests.");
     }
 
     try {
-      await mongoose.connect(testDbUri, {
-        serverSelectionTimeoutMS: 10000,
-      });
+      await mongoose.connect(testDbUri, { serverSelectionTimeoutMS: 10000 });
       console.log("✅ Connected to test database");
-    } catch (error) {
-      console.error("❌ Failed to connect to test database:", error.message);
-      throw error;
+    } catch (err) {
+      console.error("❌ Database connection failed:", err.message);
+      throw err;
     }
   });
 
   afterAll(async () => {
-    // Close database connection
-    try {
-      await mongoose.connection.close();
-      console.log("✅ Closed database connection");
-    } catch (error) {
-      console.error("⚠️ Error closing database connection:", error.message);
-    }
+    await mongoose.connection.close();
+    console.log("✅ Closed test database");
   });
 
   beforeEach(async () => {
-    // Clean up test users
-    await User.deleteMany({ email: { $regex: /^test.*@test\.com$/ } });
-    testUsers = [];
-    // Clear mock call history but keep mock implementations
+    // CLEAN ALL USERS — prevents interference from other test files
+    await User.deleteMany({});
+
     vi.clearAllMocks();
-    // Restore default mock implementations
+
+    // Default behavior
     mockSend.mockResolvedValue(undefined);
     mockIsConfigured.mockReturnValue(true);
   });
 
+  // -------------------------------------------------------
+  // sendNewGameAnnouncement
+  // -------------------------------------------------------
+
   describe("sendNewGameAnnouncement", () => {
     it("should send emails to all opted-in users", async () => {
-      // Create test users
-      const optedInUser1 = await User.create({
+      // Create users
+      const u1 = await User.create({
         username: "testuser1",
         email: "test1@test.com",
-        password: "password123",
+        password: "password",
         newsletterOptIn: true,
       });
 
-      const optedInUser2 = await User.create({
+      const u2 = await User.create({
         username: "testuser2",
         email: "test2@test.com",
-        password: "password123",
+        password: "password",
         newsletterOptIn: true,
       });
 
-      const optedOutUser = await User.create({
+      await User.create({
         username: "testuser3",
         email: "test3@test.com",
-        password: "password123",
+        password: "password",
         newsletterOptIn: false,
       });
 
-      testUsers = [optedInUser1, optedInUser2, optedOutUser];
-
-      const game = {
-        _id: "507f1f77bcf86cd799439011",
-        title: "Test Game",
-        description: "A test game description",
-      };
+      const game = { _id: "507f1f77bcf86cd799439011", title: "Test Game" };
 
       const result = await newsletterService.sendNewGameAnnouncement(game);
 
-      // Should send to 2 opted-in users
       expect(result.sent).toBe(2);
       expect(result.failed).toBe(0);
 
-      // Verify emailService.send was called twice (for opted-in users only)
       expect(mockSend).toHaveBeenCalledTimes(2);
 
-      // Verify correct email content
-      const firstCall = mockSend.mock.calls[0][0];
-      const secondCall = mockSend.mock.calls[1][0];
+      const call1 = mockSend.mock.calls[0][0];
+      const call2 = mockSend.mock.calls[1][0];
 
-      expect(firstCall.to).toBe("test1@test.com");
-      expect(firstCall.subject).toBe("New game added: Test Game");
-      expect(firstCall.html).toContain("testuser1");
-      expect(firstCall.html).toContain("Test Game");
-      expect(firstCall.html).toContain("Check It Out");
-      expect(firstCall.html).toContain("GameAble Team");
+      expect(call1.to).toBe("test1@test.com");
+      expect(call1.subject).toBe("New game added: Test Game");
+      expect(call1.html).toContain("testuser1");
+      expect(call1.html).toContain("Test Game");
+      expect(call1.html).toContain("Check It Out");
+      expect(call1.html).toContain("GameAble Team");
 
-      expect(secondCall.to).toBe("test2@test.com");
-      expect(secondCall.subject).toBe("New game added: Test Game");
-      expect(secondCall.html).toContain("testuser2");
-      expect(secondCall.html).toContain("Test Game");
+      expect(call2.to).toBe("test2@test.com");
+      expect(call2.subject).toBe("New game added: Test Game");
+      expect(call2.html).toContain("testuser2");
+      expect(call2.html).toContain("Test Game");
     });
 
-    it("should not send emails if no users have opted in", async () => {
-      const optedOutUser = await User.create({
-        username: "testuser1",
-        email: "test1@test.com",
-        password: "password123",
+    it("should not send emails when no users opted in", async () => {
+      await User.create({
+        username: "u1",
+        email: "u1@test.com",
+        password: "pw",
         newsletterOptIn: false,
       });
 
-      testUsers = [optedOutUser];
-
-      const game = {
+      const result = await newsletterService.sendNewGameAnnouncement({
         title: "Test Game",
-      };
-
-      const result = await newsletterService.sendNewGameAnnouncement(game);
+      });
 
       expect(result.sent).toBe(0);
       expect(result.failed).toBe(0);
       expect(mockSend).not.toHaveBeenCalled();
     });
 
-    it("should handle email sending failures gracefully", async () => {
-      // Mock emailService.send to fail for first user
+    it("should handle email sending failures", async () => {
+      // fail first send, succeed second
       mockSend
         .mockRejectedValueOnce(new Error("Email failed"))
         .mockResolvedValueOnce(undefined);
 
-      const optedInUser1 = await User.create({
-        username: "testuser1",
-        email: "test1@test.com",
-        password: "password123",
+      await User.create({
+        username: "u1",
+        email: "u1@test.com",
+        password: "pw",
         newsletterOptIn: true,
       });
 
-      const optedInUser2 = await User.create({
-        username: "testuser2",
-        email: "test2@test.com",
-        password: "password123",
+      await User.create({
+        username: "u2",
+        email: "u2@test.com",
+        password: "pw",
         newsletterOptIn: true,
       });
 
-      testUsers = [optedInUser1, optedInUser2];
-
-      const game = {
+      const result = await newsletterService.sendNewGameAnnouncement({
         title: "Test Game",
-      };
+      });
 
-      const result = await newsletterService.sendNewGameAnnouncement(game);
-
-      // One should succeed, one should fail
       expect(result.sent).toBe(1);
       expect(result.failed).toBe(1);
       expect(mockSend).toHaveBeenCalledTimes(2);
     });
 
-    it("should include game title in email subject and body", async () => {
-      const optedInUser = await User.create({
+    it("should include correct HTML content", async () => {
+      await User.create({
         username: "testuser1",
         email: "test1@test.com",
-        password: "password123",
+        password: "pw",
         newsletterOptIn: true,
       });
 
-      testUsers = [optedInUser];
-
-      const game = {
-        _id: "507f1f77bcf86cd799439011",
-        title: "Amazing Game Title",
-      };
+      const game = { _id: "507f1f77bcf86cd799439011", title: "Amazing Game Title" };
 
       await newsletterService.sendNewGameAnnouncement(game);
 
-      const callArgs = mockSend.mock.calls[0][0];
-      expect(callArgs.subject).toBe("New game added: Amazing Game Title");
-      expect(callArgs.html).toContain("Amazing Game Title");
-      expect(callArgs.html).toContain("Check It Out");
-      expect(callArgs.html).toContain("GameAble Team");
-      expect(callArgs.html).toContain("testuser1");
+      const call = mockSend.mock.calls[0][0];
+
+      expect(call.subject).toBe("New game added: Amazing Game Title");
+      expect(call.html).toContain("Amazing Game Title");
+      expect(call.html).toContain("Check It Out");
+      expect(call.html).toContain("GameAble Team");
+      expect(call.html).toContain("testuser1");
     });
 
     it("should throw error if game object is invalid", async () => {
@@ -212,29 +182,24 @@ describe("NewsletterService", () => {
         "Game object with title is required"
       );
 
-      await expect(newsletterService.sendNewGameAnnouncement({})).rejects.toThrow(
-        "Game object with title is required"
-      );
+      await expect(
+        newsletterService.sendNewGameAnnouncement({})
+      ).rejects.toThrow("Game object with title is required");
     });
 
-    it("should return zero sent/failed if email service is not configured", async () => {
-      // Mock emailService to return false for isConfigured
+    it("should return {sent:0, failed:0} if email service not configured", async () => {
       mockIsConfigured.mockReturnValueOnce(false);
 
-      const optedInUser = await User.create({
-        username: "testuser1",
-        email: "test1@test.com",
-        password: "password123",
+      await User.create({
+        username: "u1",
+        email: "u1@test.com",
+        password: "pw",
         newsletterOptIn: true,
       });
 
-      testUsers = [optedInUser];
-
-      const game = {
+      const result = await newsletterService.sendNewGameAnnouncement({
         title: "Test Game",
-      };
-
-      const result = await newsletterService.sendNewGameAnnouncement(game);
+      });
 
       expect(result.sent).toBe(0);
       expect(result.failed).toBe(0);
@@ -242,26 +207,30 @@ describe("NewsletterService", () => {
     });
   });
 
+  // -------------------------------------------------------
+  // getOptedInCount
+  // -------------------------------------------------------
+
   describe("getOptedInCount", () => {
-    it("should return correct count of opted-in users", async () => {
+    it("should return correct count", async () => {
       await User.create({
-        username: "testuser1",
-        email: "test1@test.com",
-        password: "password123",
+        username: "a",
+        email: "a@test.com",
+        password: "pw",
         newsletterOptIn: true,
       });
 
       await User.create({
-        username: "testuser2",
-        email: "test2@test.com",
-        password: "password123",
+        username: "b",
+        email: "b@test.com",
+        password: "pw",
         newsletterOptIn: true,
       });
 
       await User.create({
-        username: "testuser3",
-        email: "test3@test.com",
-        password: "password123",
+        username: "c",
+        email: "c@test.com",
+        password: "pw",
         newsletterOptIn: false,
       });
 
@@ -269,11 +238,11 @@ describe("NewsletterService", () => {
       expect(count).toBe(2);
     });
 
-    it("should return 0 if no users have opted in", async () => {
+    it("should return 0 when nobody opted in", async () => {
       await User.create({
-        username: "testuser1",
-        email: "test1@test.com",
-        password: "password123",
+        username: "x",
+        email: "x@test.com",
+        password: "pw",
         newsletterOptIn: false,
       });
 
