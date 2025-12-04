@@ -323,7 +323,7 @@ describe("Settings Component", () => {
       renderSettings();
 
       expect(
-        screen.getByText(/💡 Tip: Click on any text element to have it read aloud/i)
+        screen.getByText(/Tip: Click on any text element to have it read aloud/i)
       ).toBeInTheDocument();
     });
 
@@ -331,7 +331,7 @@ describe("Settings Component", () => {
       renderSettings();
 
       expect(
-        screen.queryByText(/💡 Tip: Click on any text element to have it read aloud/i)
+        screen.queryByText(/Tip: Click on any text element to have it read aloud/i)
       ).not.toBeInTheDocument();
     });
 

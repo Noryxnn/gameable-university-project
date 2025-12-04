@@ -156,6 +156,7 @@ describe("Register Component", () => {
         username: "testuser",
         email: "test@example.com",
         password: "password123",
+        newsletterOptIn: false,
       });
     });
   });

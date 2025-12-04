@@ -184,7 +184,7 @@ const GameDetail = ({ user }) => {
   };
 
   const handleDeleteGame = async () => {
-    if (!window.confirm(`⚠️ WARNING: Are you sure you want to PERMANENTLY DELETE "${game.title}"? This action cannot be undone and will remove the game from the website.`)) {
+    if (!window.confirm(`WARNING: Are you sure you want to PERMANENTLY DELETE "${game.title}"? This action cannot be undone and will remove the game from the website.`)) {
       return;
     }
 
@@ -301,7 +301,7 @@ const GameDetail = ({ user }) => {
                 />
                 {/* PlayStation-style ribbon */}
                 <div className="absolute top-4 left-0 bg-blue-600 px-4 py-2 flex items-center gap-2">
-                  <span className="text-white font-bold text-sm">🎮</span>
+                  <span className="text-white font-bold text-sm">GAME</span>
                 </div>
               </div>
             </div>

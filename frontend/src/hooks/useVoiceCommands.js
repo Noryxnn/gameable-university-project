@@ -4,9 +4,34 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 // Check for browser support
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
+// Activation phrases that will toggle voice commands when spoken
+const ACTIVATION_PHRASES = [
+  'toggle voice command',
+  'toggle voice commands',
+  'hey gameable',
+  'hey game able',
+  'ok gameable',
+  'okay gameable',
+  'activate voice',
+  'voice command',
+  'start listening',
+  'gameable listen',
+];
+
+// Check if text contains an activation phrase
+const containsActivationPhrase = (text) => {
+  const lowerText = text.toLowerCase().trim();
+  return ACTIVATION_PHRASES.some(phrase => lowerText.includes(phrase));
+};
+
 // Parse voice input into structured commands - defined outside hook to avoid hoisting issues
 const parseCommand = (text) => {
   const lowerText = text.toLowerCase().trim();
+  
+  // Check for activation phrase first
+  if (containsActivationPhrase(lowerText)) {
+    return { type: 'action', action: 'toggleVoice' };
+  }
   
   // Navigation commands
   if (lowerText.match(/^(go to |navigate to |open )?(home|main|browse)/)) {
@@ -194,16 +219,23 @@ const useVoiceCommands = (options = {}) => {
     onError,
     continuous = false,
     language = 'en-US',
+    enablePassiveListening = true, // Enable passive listening for activation phrase
   } = options;
 
   const [isListening, setIsListening] = useState(false);
+  const [isPassiveListening, setIsPassiveListening] = useState(false);
   const [isSupported, setIsSupported] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [interimTranscript, setInterimTranscript] = useState('');
   const [error, setError] = useState(null);
   
   const recognitionRef = useRef(null);
+  const passiveRecognitionRef = useRef(null);
   const isListeningRef = useRef(false);
+  const isPassiveListeningRef = useRef(false);
+
+  // Ref for toggle callback to avoid circular dependency
+  const toggleListeningCallbackRef = useRef(null);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -214,6 +246,8 @@ const useVoiceCommands = (options = {}) => {
     }
 
     setIsSupported(true);
+    
+    // Main recognition for active commands
     const recognition = new SpeechRecognition();
     
     recognition.continuous = continuous;
@@ -270,7 +304,19 @@ const useVoiceCommands = (options = {}) => {
         if (onCommand) {
           const command = parseCommand(finalTranscript);
           if (command) {
-            onCommand(command);
+            // Handle toggleVoice action internally
+            if (command.type === 'action' && command.action === 'toggleVoice') {
+              // Stop listening when toggle phrase is detected while active
+              if (recognitionRef.current && isListeningRef.current) {
+                try {
+                  recognitionRef.current.stop();
+                } catch (err) {
+                  console.error('Error stopping recognition:', err);
+                }
+              }
+            } else {
+              onCommand(command);
+            }
           }
         }
       } else {
@@ -280,15 +326,95 @@ const useVoiceCommands = (options = {}) => {
 
     recognitionRef.current = recognition;
 
+    // Passive recognition for activation phrase detection
+    if (enablePassiveListening) {
+      const passiveRecognition = new SpeechRecognition();
+      passiveRecognition.continuous = true;
+      passiveRecognition.interimResults = true;
+      passiveRecognition.lang = language;
+      passiveRecognition.maxAlternatives = 1;
+
+      passiveRecognition.onstart = () => {
+        setIsPassiveListening(true);
+        isPassiveListeningRef.current = true;
+      };
+
+      passiveRecognition.onend = () => {
+        setIsPassiveListening(false);
+        isPassiveListeningRef.current = false;
+        
+        // Auto-restart passive listening if not in active listening mode
+        if (!isListeningRef.current && passiveRecognitionRef.current) {
+          setTimeout(() => {
+            if (!isListeningRef.current && passiveRecognitionRef.current) {
+              try {
+                passiveRecognitionRef.current.start();
+              } catch {
+                // Ignore errors when trying to restart
+              }
+            }
+          }, 500);
+        }
+      };
+
+      passiveRecognition.onerror = (event) => {
+        // Silently handle errors for passive mode - don't show to user
+        if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          console.log('Passive recognition error:', event.error);
+        }
+        setIsPassiveListening(false);
+        isPassiveListeningRef.current = false;
+      };
+
+      passiveRecognition.onresult = (event) => {
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            finalTranscript += result[0].transcript;
+          }
+        }
+
+        if (finalTranscript && containsActivationPhrase(finalTranscript)) {
+          // Stop passive listening and start active listening
+          try {
+            passiveRecognition.stop();
+          } catch {
+            // Ignore
+          }
+          
+          // Toggle the main listening using the callback ref
+          if (toggleListeningCallbackRef.current) {
+            toggleListeningCallbackRef.current();
+          }
+        }
+      };
+
+      passiveRecognitionRef.current = passiveRecognition;
+    }
+
     return () => {
       if (recognitionRef.current) {
         recognitionRef.current.abort();
       }
+      if (passiveRecognitionRef.current) {
+        passiveRecognitionRef.current.abort();
+      }
     };
-  }, [continuous, language, onCommand, onResult, onError]);
+  }, [continuous, language, onCommand, onResult, onError, enablePassiveListening]);
 
   const startListening = useCallback(() => {
     if (!recognitionRef.current || isListeningRef.current) return;
+    
+    // Stop passive listening when starting active
+    if (passiveRecognitionRef.current && isPassiveListeningRef.current) {
+      try {
+        passiveRecognitionRef.current.stop();
+      } catch {
+        // Ignore errors
+      }
+    }
     
     try {
       setError(null);
@@ -317,8 +443,36 @@ const useVoiceCommands = (options = {}) => {
     }
   }, [startListening, stopListening]);
 
+  // Store toggle callback in ref for passive recognition to use
+  useEffect(() => {
+    toggleListeningCallbackRef.current = toggleListening;
+  }, [toggleListening]);
+
+  // Start passive listening on mount
+  const startPassiveListening = useCallback(() => {
+    if (!passiveRecognitionRef.current || isPassiveListeningRef.current || isListeningRef.current) return;
+    
+    try {
+      passiveRecognitionRef.current.start();
+    } catch (err) {
+      // Silently ignore errors for passive mode
+      console.log('Could not start passive listening:', err.message);
+    }
+  }, []);
+
+  const stopPassiveListening = useCallback(() => {
+    if (!passiveRecognitionRef.current || !isPassiveListeningRef.current) return;
+    
+    try {
+      passiveRecognitionRef.current.stop();
+    } catch {
+      // Ignore errors
+    }
+  }, []);
+
   return {
     isListening,
+    isPassiveListening,
     isSupported,
     transcript,
     interimTranscript,
@@ -326,6 +480,8 @@ const useVoiceCommands = (options = {}) => {
     startListening,
     stopListening,
     toggleListening,
+    startPassiveListening,
+    stopPassiveListening,
   };
 };
 

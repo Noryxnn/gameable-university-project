@@ -91,5 +91,64 @@ describe("User Model - Google OAuth Support", () => {
       expect(user.email).toBe("existing@example.com");
     });
   });
+
+  describe("Newsletter Opt-In Fields", () => {
+    it("should default newsletterOptIn to false", async () => {
+      const userData = {
+        username: "newsletteruser",
+        email: "newsletter@example.com",
+        password: "password123",
+      };
+
+      const user = new User(userData);
+      
+      expect(user.newsletterOptIn).toBe(false);
+      expect(user.newsletterOptInUpdatedAt).toBeUndefined();
+    });
+
+    it("should allow setting newsletterOptIn to true", async () => {
+      const userData = {
+        username: "newsletteruser2",
+        email: "newsletter2@example.com",
+        password: "password123",
+        newsletterOptIn: true,
+        newsletterOptInUpdatedAt: new Date(),
+      };
+
+      const user = new User(userData);
+      
+      expect(user.newsletterOptIn).toBe(true);
+      expect(user.newsletterOptInUpdatedAt).toBeTruthy();
+    });
+
+    it("should allow setting newsletterOptIn to false explicitly", async () => {
+      const userData = {
+        username: "newsletteruser3",
+        email: "newsletter3@example.com",
+        password: "password123",
+        newsletterOptIn: false,
+      };
+
+      const user = new User(userData);
+      
+      expect(user.newsletterOptIn).toBe(false);
+    });
+
+    it("should support Google OAuth users with newsletterOptIn defaulting to false", async () => {
+      const userData = {
+        username: "googleuser",
+        email: "google@example.com",
+        googleId: "google-123456",
+        authProvider: "google",
+        newsletterOptIn: false,
+        newsletterOptInUpdatedAt: null,
+      };
+
+      const user = new User(userData);
+      
+      expect(user.newsletterOptIn).toBe(false);
+      expect(user.newsletterOptInUpdatedAt).toBeNull();
+    });
+  });
 });
 

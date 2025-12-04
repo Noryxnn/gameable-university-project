@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { FaFilter, FaTimes, FaSort, FaStar, FaChevronDown } from "react-icons/fa";
+import { FaFilter, FaTimes, FaSort, FaStar, FaChevronDown, FaCheck } from "react-icons/fa";
 import { ALL_GENRES, SORT_OPTIONS, RATING_FILTERS } from "../utils/gameConstants";
 
 /**
@@ -110,7 +110,7 @@ const CustomDropdown = ({ label, icon, value, onChange, options, colorScheme = "
                     <div className="flex items-center justify-between">
                       <span>{option.label}</span>
                       {isSelected && (
-                        <span className={`${colors.text} text-sm font-bold`}>✓</span>
+                        <FaCheck className={`${colors.text} text-sm`} />
                       )}
                     </div>
                   </button>
